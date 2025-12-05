@@ -18,10 +18,10 @@ const Header = () => {
 
     return (
         <header className={styles.header}>
-            <h1>Kalkulator ryzyka zachorowania na cukrzyce</h1>
-            <nav className="nav">
+            <h1 className={styles.h1}>Predyktor ryzyka zachorowania na cukrzyce</h1>
+            <nav>
                 {links.map((link) => (
-                    <Button size={link.label === 'Oblicz ryzyko' ? 'lg' : 'md'} variant={link.label === 'Oblicz ryzyko' ? 'primary' : 'secondary'}>
+                    <Button className={styles.button} size={link.label === 'Oblicz ryzyko' ? 'lg' : 'md'} variant={link.label === 'Oblicz ryzyko' ? 'primary' : 'secondary'}>
                         <a
                         key={link.label}
                         href={link.href}

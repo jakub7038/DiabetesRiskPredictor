@@ -1,11 +1,16 @@
 import './App.css'
-import Header from '@/components/layout/Header'
+import '@/styles/variables.css'
+import Header from '@/components/layout/Header/Header'
+import Footer from '@/components/layout/Footer/Footer'
+import HomePageBody from '@/components/layout/HomePageBody/HomePageBody'
 
-function App() {
+const App = () => {
 
   return (
     <>
       <Header />
+      <HomePageBody />
+      <Footer />
     </>
   )
 }

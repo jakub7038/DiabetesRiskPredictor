@@ -9,23 +9,20 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
 }
 
-export const Button = ({
+const Button = ({
   children,
   className = '',
-  variant = 'primary', // Domyślny wariant
-  size = 'md',         // Domyślny rozmiar
-  ...props             // Reszta propsów (onClick, id, style itp.)
+  variant = 'primary', 
+  size = 'md',         
+  ...props             
 }: ButtonProps) => {
   
-  // Łączenie klas CSS w jeden ciąg znaków
-  // styles.button - klasa bazowa
-  // styles[variant] - klasa dynamiczna zależna od wariantu
-  // styles[size] - klasa dynamiczna zależna od rozmiaru
+
   const classNames = [
     styles.button,
     styles[variant],
     styles[size],
-    className // Pozwala na nadpisanie stylów z zewnątrz
+    className 
   ].join(' ');
 
   return (

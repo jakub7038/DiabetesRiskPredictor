@@ -65,6 +65,10 @@
   border-color: #e5e7eb;
 }
 
+.secondary a {
+  color: #1f2937;
+}
+
 .secondary:hover:not(:disabled) {
   background-color: #e5e7eb;
   color: #111827;

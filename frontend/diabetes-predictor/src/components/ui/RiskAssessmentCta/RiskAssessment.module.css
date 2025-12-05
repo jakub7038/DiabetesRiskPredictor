@@ -1,0 +1,21 @@
+.ctaSection{
+    background-color: var(--color-primary);
+    color: var(--color-text);
+    width: 30%;
+    margin: 20px;
+    padding: 30px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.h2{
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.ctaButton{
+    margin-top: 20px;
+}
