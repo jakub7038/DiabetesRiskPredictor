@@ -1,5 +1,6 @@
 import styles from './Header.module.css'
 import Button from '@/components/ui/Button/Button'
+import { Link } from 'react-router-dom' 
 
 
 const Header = () => {
@@ -10,26 +11,26 @@ const Header = () => {
     };
 
     const links: NavLink[] = [
-        { label: 'Oblicz ryzyko', href: '/' },
-        { label: 'Logowanie', href: '/' },
-        { label: 'Rejestracja', href: '/' },
+        { label: 'Oblicz ryzyko', href: '/predyktor-ryzyka' },
+        { label: 'Logowanie', href: '/logowanie' },
+        { label: 'Rejestracja', href: '/rejestracja' },
     ];
 
 
     return (
         <header className={styles.header}>
-            <h1 className={styles.h1}>Predyktor ryzyka zachorowania na cukrzyce</h1>
+            <Link to="/home"><h1 className={styles.h1}>Predyktor ryzyka zachorowania na cukrzyce</h1></Link>
             <nav>
                 {links.map((link) => (
-                    <Button className={styles.button} size={link.label === 'Oblicz ryzyko' ? 'lg' : 'md'} variant={link.label === 'Oblicz ryzyko' ? 'primary' : 'secondary'}>
-                        <a
-                        key={link.label}
-                        href={link.href}
-                        className=""
+                    <Link key={link.label} to={link.href} style={{ textDecoration: 'none' }}>
+                        <Button 
+                            className={styles.button} 
+                            size={link.label === 'Oblicz ryzyko' ? 'lg' : 'md'} 
+                            variant={link.label === 'Oblicz ryzyko' ? 'primary' : 'secondary'}
                         >
-                        {link.label}
-                        </a>
-                    </Button>
+                            {link.label}
+                        </Button>
+                    </Link>
                 ))}
             </nav>
         </header>

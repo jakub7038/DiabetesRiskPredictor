@@ -49,7 +49,7 @@
 
 /* Primary - Główny niebieski */
 .primary {
-  background-color: #2563eb;
+  background-color: var(--color-secondary);
   color: #ffffff;
 }
 
