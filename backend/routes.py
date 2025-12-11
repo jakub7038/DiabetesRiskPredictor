@@ -1,0 +1,1 @@
+# uzupełnić trasy do frontendu

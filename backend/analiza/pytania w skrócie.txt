@@ -1,0 +1,37 @@
+HighBP (Wysokie ciśnienie) 1/0
+HighChol (Wysoki cholesterol) 1/0
+CholCheck (Badanie cholesterolu w ciągu ostatnich 5 lat?)  0/1
+Stroke (Udar) 1/0
+DiffWalk (Trudności z chodzeniem) 1/0
+PhysActivity (Aktywność fizyczna w ostatnim miesiącu poza pracą) 1/0
+AnyHealthcare (Ubezpieczenie) 1/0
+NoDocbcCost (Brak wizyty u lekarza z powodu kosztów) 1/0
+GenHlth (Ogólny stan zdrowia) Skala 1-5 (Doskonałe – Złe)
+PhysHlth (Zdrowie fizyczne) ile dni w ostatnich 30 dni było niedobre fizycznie 0-30
+MentHlth (Zdrowie psychiczne) ile dni w ostatnich 30 dni było niedobre psychicznie 0-30
+Sex (Płeć) 1/0 (male/female).
+HeartDiseaseorAttack 1/0
+Smoker (Palacz) 1/0 (czy pali aktywnie, lub czy wypalił 100 papierosów w ciągu tego roku)
+Diabetes_012 (Cukrzyca) – 0=Brak, 1=Stan przedcukrzycowy, 2=Cukrzyca
+Fruits (Owoce) 1/0 czy spożywasz dziennie 1 lub więcej sok owocowy, lub owoc
+Veggies (Warzywa) 1/0 czy spożywasz dziennie 1 lub więcej warzywo
+HvyAlcoholConsump (Duże spożycie alkoholu) 1 for >14 male or >7 female else 0
+BMI waga/wzrost^2.
+Age (Wiek):
+18 – 24	1
+25 – 29	2
+30 – 34	3
+35 – 39	4
+40 – 44	5
+45 – 49	6
+50 – 54	7
+55 – 59	8
+60 – 64	9
+65 – 69	10
+70 – 74	11
+75 – 79	12
+>80 	13
+
+te nas nie obchodzą, ich korelacja jest niska, a te dany tylko wpływają negatywnie na wagę danych, które mają znaczenie
+Education
+Income

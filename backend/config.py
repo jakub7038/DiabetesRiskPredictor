@@ -1,0 +1,1 @@
+#konfiguracja bazy takich tam
