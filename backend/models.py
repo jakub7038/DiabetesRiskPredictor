@@ -53,10 +53,7 @@ from sqlalchemy.dialects.sqlite import JSON
 from datetime import datetime, timezone
 
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///health_predictor.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+db = SQLAlchemy()
       
 class User(db.Model):
     __tablename__ = 'users'
@@ -141,10 +138,3 @@ class History(db.Model):
 
     def __repr__(self):
         return f'<History Result {self.result} User {self.user_id}>'
-
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        print("Baza danych została utworzona pomyślnie: health_predictor.db")
-
