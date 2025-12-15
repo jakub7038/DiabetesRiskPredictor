@@ -1,0 +1,14 @@
+
+.section{
+    width: 33vw;
+    color: black;
+
+    margin: 50px;
+}
+
+.title{
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 2rem;
+}
