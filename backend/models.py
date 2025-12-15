@@ -1,85 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-import json
-
-# --- THIS WAS MISSING ---
-# This initializes the database object that app.py is trying to import
-db = SQLAlchemy()
-# ------------------------
-
-# 1. USERS TABLE
-class User(db.Model):
-    __tablename__ = 'users'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
-    # uselist=False makes this a 1-to-1 relationship
-    user_data = db.relationship('UserData', backref='user', uselist=False) 
-    # lazy=True means logs aren't loaded until you ask for them
-    logs = db.relationship('Log', backref='user', lazy=True)
-    history = db.relationship('History', backref='user', lazy=True)
-
-    # Security Methods (Used by auth.py)
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-# 2. USER DATA TABLE (Static Health Profile)
-class UserData(db.Model):
-    __tablename__ = 'user_data'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
-    
-    sex = db.Column(db.Boolean)
-    age = db.Column(db.Integer)
-    high_bp = db.Column(db.Boolean)
-    high_chol = db.Column(db.Boolean)
-    chol_check = db.Column(db.Boolean)
-    smoker = db.Column(db.Boolean)
-    stroke = db.Column(db.Boolean)
-    heart_disease = db.Column(db.Boolean)
-    any_healthcare = db.Column(db.Boolean)
-    no_docbc_cost = db.Column(db.Boolean)
-    diff_walk = db.Column(db.Boolean)
-
-# 3. LOGS TABLE (Daily Entries)
-class Log(db.Model):
-    __tablename__ = 'logs'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    log_date = db.Column(db.Date, default=datetime.utcnow)
-    
-    ate_fruit = db.Column(db.Boolean)
-    ate_veggie = db.Column(db.Boolean)
-    physical_activity = db.Column(db.Boolean)
-    alcohol_drinks = db.Column(db.Integer)
-    bad_mental_day = db.Column(db.Boolean)
-    bad_physical_day = db.Column(db.Boolean)
-    weight = db.Column(db.Numeric(5, 2))
-    height = db.Column(db.Numeric(5, 2))
-
-# 4. HISTORY TABLE (ML Predictions)
-class History(db.Model):
-    __tablename__ = 'history'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    result = db.Column(db.Integer)       # 0 or 1
-    probability = db.Column(db.Float)    # e.g., 0.85
-    input_snapshot = db.Column(db.JSON)  # Stores the exact data used for prediction
-
-    """
+"""
 
 USERS
 id	INTEGER/SERIAL PK
@@ -126,3 +45,106 @@ input_snapshot JSON
 
 
 """
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+import json
+from flask import Flask
+from sqlalchemy.dialects.sqlite import JSON
+from datetime import datetime, timezone
+
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///health_predictor.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+      
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relacja user 1:1 UserData
+    data = db.relationship('UserData', backref='user', uselist=False, cascade="all, delete-orphan")
+    # Relacja user 1:N Logs
+    logs = db.relationship('Log', backref='user', lazy=True)
+    # Relacja user 1:N History
+    history = db.relationship('History', backref='user', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+      
+    def __repr__(self):
+        return f'<User {self.email}>'
+
+class UserData(db.Model):
+    __tablename__ = 'user_data'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
+
+    sex = db.Column(db.Boolean, nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+
+    high_bp = db.Column(db.Boolean, default=False, nullable=False)
+    high_chol = db.Column(db.Boolean, default=False, nullable=False)
+    chol_check = db.Column(db.Boolean, default=False, nullable=False)
+    smoker = db.Column(db.Boolean, default=False, nullable=False)
+    stroke = db.Column(db.Boolean, default=False, nullable=False)
+    heart_disease = db.Column(db.Boolean, default=False, nullable=False)
+    
+    any_healthcare = db.Column(db.Boolean, default=True, nullable=False)
+    no_docbc_cost = db.Column(db.Boolean, default=False, nullable=False)
+    
+    diff_walk = db.Column(db.Boolean, default=False, nullable=False)
+
+    def __repr__(self):
+        return f'<UserData for User {self.user_id}>'
+      
+    
+class Log(db.Model):
+    __tablename__ = 'logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    log_date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date(), nullable=False)
+
+    ate_fruit = db.Column(db.Boolean, default=False)
+    ate_veggie = db.Column(db.Boolean, default=False)
+    physical_activity = db.Column(db.Boolean, default=False)
+    alcohol_drinks = db.Column(db.Integer, default=0)
+    bad_mental_day = db.Column(db.Boolean, default=False)
+    bad_physical_day = db.Column(db.Boolean, default=False)
+    weight = db.Column(db.Float)
+    height = db.Column(db.Float)
+
+    def __repr__(self):
+        return f'<Log {self.log_date} User {self.user_id}>'
+
+
+class History(db.Model):
+    __tablename__ = 'history'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    result = db.Column(db.Integer, nullable=False)
+    probability = db.Column(db.Float, nullable=False)
+
+    input_snapshot = db.Column(db.JSON, nullable=True)
+
+    def __repr__(self):
+        return f'<History Result {self.result} User {self.user_id}>'
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        print("Baza danych została utworzona pomyślnie: health_predictor.db")
+
