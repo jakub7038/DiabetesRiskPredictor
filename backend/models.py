@@ -45,22 +45,19 @@ input_snapshot JSON
 
 
 """
-
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+import json
+from flask import Flask
 from sqlalchemy.dialects.sqlite import JSON
 from datetime import datetime, timezone
 
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///health_predictor.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-
+db = SQLAlchemy()
+      
 class User(db.Model):
     __tablename__ = 'users'
-
+    
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -73,9 +70,14 @@ class User(db.Model):
     # Relacja user 1:N History
     history = db.relationship('History', backref='user', lazy=True)
 
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+      
     def __repr__(self):
         return f'<User {self.email}>'
-
 
 class UserData(db.Model):
     __tablename__ = 'user_data'
@@ -85,20 +87,23 @@ class UserData(db.Model):
 
     sex = db.Column(db.Boolean, nullable=False)
     age = db.Column(db.Integer, nullable=False)
-    high_bp = db.Column(db.Boolean, default=False)
-    high_chol = db.Column(db.Boolean, default=False)
-    chol_check = db.Column(db.Boolean, default=False)
-    smoker = db.Column(db.Boolean, default=False)
-    stroke = db.Column(db.Boolean, default=False)
-    heart_disease = db.Column(db.Boolean, default=False)
-    any_healthcare = db.Column(db.Boolean, default=True)
-    no_docbc_cost = db.Column(db.Boolean, default=False)
-    diff_walk = db.Column(db.Boolean, default=False)
+
+    high_bp = db.Column(db.Boolean, default=False, nullable=False)
+    high_chol = db.Column(db.Boolean, default=False, nullable=False)
+    chol_check = db.Column(db.Boolean, default=False, nullable=False)
+    smoker = db.Column(db.Boolean, default=False, nullable=False)
+    stroke = db.Column(db.Boolean, default=False, nullable=False)
+    heart_disease = db.Column(db.Boolean, default=False, nullable=False)
+    
+    any_healthcare = db.Column(db.Boolean, default=True, nullable=False)
+    no_docbc_cost = db.Column(db.Boolean, default=False, nullable=False)
+    
+    diff_walk = db.Column(db.Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return f'<UserData for User {self.user_id}>'
-
-
+      
+    
 class Log(db.Model):
     __tablename__ = 'logs'
 
@@ -129,14 +134,7 @@ class History(db.Model):
     result = db.Column(db.Integer, nullable=False)
     probability = db.Column(db.Float, nullable=False)
 
-    input_snapshot = db.Column(JSON, nullable=True)
+    input_snapshot = db.Column(db.JSON, nullable=True)
 
     def __repr__(self):
         return f'<History Result {self.result} User {self.user_id}>'
-
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        print("Baza danych została utworzona pomyślnie: health_predictor.db")
-

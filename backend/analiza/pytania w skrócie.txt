@@ -1,11 +1,8 @@
 HighBP (Wysokie ciśnienie) 1/0
 HighChol (Wysoki cholesterol) 1/0
-CholCheck (Badanie cholesterolu w ciągu ostatnich 5 lat?)  0/1
 Stroke (Udar) 1/0
 DiffWalk (Trudności z chodzeniem) 1/0
 PhysActivity (Aktywność fizyczna w ostatnim miesiącu poza pracą) 1/0
-AnyHealthcare (Ubezpieczenie) 1/0
-NoDocbcCost (Brak wizyty u lekarza z powodu kosztów) 1/0
 GenHlth (Ogólny stan zdrowia) Skala 1-5 (Doskonałe – Złe)
 PhysHlth (Zdrowie fizyczne) ile dni w ostatnich 30 dni było niedobre fizycznie 0-30
 MentHlth (Zdrowie psychiczne) ile dni w ostatnich 30 dni było niedobre psychicznie 0-30
@@ -35,3 +32,7 @@ Age (Wiek):
 te nas nie obchodzą, ich korelacja jest niska, a te dany tylko wpływają negatywnie na wagę danych, które mają znaczenie
 Education
 Income
+NoDocbcCost
+AnyHealthcare
+CholCheck (Badanie cholesterolu w ciągu ostatnich 5 lat?)  0/1
+
