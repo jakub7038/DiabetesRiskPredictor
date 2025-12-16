@@ -34,20 +34,15 @@ const Register = () => {
         setError(null);
 
         try {
-            // Wysyłamy tylko email i hasło (bez confirmPassword)
             await authService.register({
                 email: formData.email,
                 password: formData.password
             });
-
-            // Sukces
             alert("Konto zostało założone! Możesz się teraz zalogować.");
-            navigate('/logowanie'); // Przekierowanie do logowania
+            navigate('/logowanie');
 
         } catch (err: any) {
             console.error(err);
-            // Jeśli backend zwraca konkretny komunikat (np. "User already exists"), warto go wyświetlić
-            // Zakładając, że authService rzuca Error z wiadomością:
             setError(err.message || "Wystąpił błąd podczas rejestracji.");
         } finally {
             setIsLoading(false);

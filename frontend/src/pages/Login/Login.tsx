@@ -4,11 +4,13 @@ import Input from '@/components/ui/Input/Input';
 import Button from '@/components/ui/Button/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '@/api/authService';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
-  const navigate = useNavigate(); // Hook do nawigacji
-  const [error, setError] = useState<string | null>(null); // Stan na błędy
-  const [isLoading, setIsLoading] = useState(false); // Stan ładowania
+  const navigate = useNavigate(); 
+  const { login } = useAuth();
+  const [error, setError] = useState<string | null>(null); 
+  const [isLoading, setIsLoading] = useState(false); 
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -29,14 +31,20 @@ const Login = () => {
     setError(null);
 
     try {
-      // 1. Wywołanie logowania
-      await authService.login(formData);
+      const result = await authService.login(formData);
       
-      // 2. Sukces - przekierowanie (np. do panelu głównego lub ankiety)
-      navigate('/konto'); 
+      console.log(result)
+
+      if (result.data && result.data.access_token) {
+          
+          const userData = result.data.user || { id: '0', email: formData.email }; 
+          
+          login(result.data.access_token, userData);
+          
+          navigate('/konto');
+      }
       
     } catch (err: any) {
-      // 3. Obsługa błędu
       console.error(err);
       setError("Nieprawidłowy email lub hasło.");
     } finally {

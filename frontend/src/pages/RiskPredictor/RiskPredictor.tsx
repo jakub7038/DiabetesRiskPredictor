@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-// IMPORTUJEMY JAKO OBIEKT styles
+import { useState } from 'react';
 import styles from './RiskPredictor.module.css';
+import { authService } from '@/api/authService';
 
 interface Option {
     label: string;
@@ -12,9 +12,9 @@ interface QuestionConfig {
     text: string;
     type: 'select' | 'number';
     options?: Option[];
-    unit?: string;        
-    min?: number;         
-    max?: number;         
+    unit?: string;
+    min?: number;
+    max?: number;
 }
 
 interface StepConfig {
@@ -33,7 +33,7 @@ const STEPS: StepConfig[] = [
         description: "Wypełnij podstawowe informacje.",
         questions: [
             {
-                id: 'gender',
+                id: 'Sex',
                 text: "Jaka jest Twoja płeć?",
                 type: 'select',
                 options: [
@@ -42,7 +42,7 @@ const STEPS: StepConfig[] = [
                 ]
             },
             {
-                id: 'age',
+                id: 'Age',
                 text: "Wybierz przedział wiekowy",
                 type: 'select',
                 options: [
@@ -63,13 +63,13 @@ const STEPS: StepConfig[] = [
             },
 
             {
-                id: 'height',
+                id: 'Height',
                 text: "Podaj swój wzrost w cm",
                 type: "number",
 
             },
             {
-                id: 'weight',
+                id: 'Weight',
                 text: "Jaka jest Twoja waga?",
                 type: 'number',
                 unit: 'kg',
@@ -191,7 +191,7 @@ const STEPS: StepConfig[] = [
                 ]
             },
             {
-                id: 'MentHlth ',
+                id: 'MentHlth',
                 text: "W ciągu ostatni 30 dni przez ile dni czułeś się dobrze pod względem zdrowia mentalnego ?",
                 type: 'number',
                 unit: 'whatever',
@@ -206,6 +206,8 @@ const RiskPredictor = () => {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
     const [answers, setAnswers] = useState<Record<string, string | undefined>>({});
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const currentStep = STEPS[currentStepIndex];
     const isFirstStep = currentStepIndex === 0;
@@ -231,10 +233,59 @@ const RiskPredictor = () => {
         return ans !== undefined && ans !== '';
     });
 
-    const handleSubmit = () => {
-        // Do zrobienia 
-        console.log(answers);
+    const handleSubmit = async () => {
+        setIsLoading(true);
+        try {
+            const weight = parseFloat(answers['Weight'] || '0');
+            const heightCm = parseFloat(answers['Height'] || '0');
 
+            let bmi = 0;
+            if (heightCm > 0) {
+                const heightM = heightCm / 100;
+                bmi = weight / (heightM * heightM);
+            }
+
+            const predictionData = {
+                Sex: parseInt(answers['Sex'] || '0'),
+                Age: parseInt(answers['Age'] || '1'),
+
+                BMI: bmi,
+
+                HighBP: parseInt(answers['HighBP'] || '0'),
+                HighChol: parseInt(answers['HighChol'] || '0'),
+                Stroke: parseInt(answers['Stroke'] || '0'),
+                DiffWalk: parseInt(answers['DiffWalk'] || '0'),
+                GenHlth: parseInt(answers['GenHlth'] || '3'),
+                PhysHlth: parseInt(answers['PhysHlth'] || '0'),
+
+                PhysActivity: parseInt(answers['PhysActivity'] || '0'),
+                Smoker: parseInt(answers['Smoker'] || '0'),
+                Fruits: parseInt(answers['Fruits'] || '0'),
+                Veggies: parseInt(answers['Veggies'] || '0'),
+                HvyAlcoholConsump: parseInt(answers['HvyAlcoholConsump'] || '0'),
+                MentHlth: parseInt(answers['MentHlth'] || '0'),
+
+            };
+
+            console.log(predictionData);
+
+            const result = await authService.predict(predictionData);
+
+            const percentage = (result.probability * 100).toFixed(1);
+            const diabetes_result = result.result
+
+            if (diabetes_result === 0) alert(`Analiza zakończona!\nTwój wynik to: BRAK CUKRZYCY GRATULACJE \nPrawdopodobieństwo: ${percentage}%`);
+            else if (diabetes_result === 1) alert(`Analiza zakończona!\nTwój wynik to: STAN PRZEDCUKRZYCOWY \nPrawdopodobieństwo: ${percentage}%`);
+            else alert(`Analiza zakończona!\nTwój wynik to: CUKRZYCA !!!!!!!!!@!!!! \nPrawdopodobieństwo: ${percentage}%`);
+
+            // navigate('/wynik', { state: { result } });
+
+        } catch (error: any) {
+            console.error("Błąd predykcji:", error);
+            alert("Wystąpił błąd podczas analizy danych: " + error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -301,7 +352,7 @@ const RiskPredictor = () => {
                                         <input
                                             type="number"
                                             className={styles.numberInput}
-                                            value={answers[question.id] || ''} 
+                                            value={answers[question.id] || ''}
                                             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
                                             min={question.min}
                                             max={question.max}
@@ -315,13 +366,13 @@ const RiskPredictor = () => {
                         ))}
                     </div>
 
-                     {/* NAWIGACJA */}
+                    {/* NAWIGACJA */}
                     <div className={styles.footerNav}>
                         <button
                             className={`${styles.navBtn} ${styles.navBtnBack}`}
                             onClick={handleBack}
                             disabled={isFirstStep}
-                            style={{ visibility: isFirstStep ? 'hidden' : 'visible' }} 
+                            style={{ visibility: isFirstStep ? 'hidden' : 'visible' }}
                         >
                             ←
                         </button>
