@@ -1,21 +1,16 @@
 from flask import Blueprint, request, jsonify
-<<<<<<< HEAD
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
+import json
+from datetime import datetime, timezone
+
 from models import db, UserData, Log, History, User
 from auth import register_user, login_user
-from datetime import datetime, timezone
-=======
-from flask_jwt_extended import jwt_required, get_jwt_identity
-import json
-
-from auth import register_user, login_user
 from ml_service import predict_diabetes_risk
-from models import db, History
->>>>>>> a9e0b9e (Finished backend ML logic)
 
+# ==========================================
+#  AUTH BLUEPRINT (Register, Login, Predict)
+# ==========================================
 auth_bp = Blueprint('auth', __name__)
-
-#  Auth Route
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -40,25 +35,57 @@ def login():
     
     return jsonify({"msg": "Bad email or password"}), 401
 
-<<<<<<< HEAD
-
 @auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
     current_user_id = get_jwt_identity()
     new_access_token = create_access_token(identity=current_user_id)
-
     return jsonify({"access_token": new_access_token}), 200
 
+# --- ML PREDICTION ROUTE ---
+@auth_bp.route('/predict', methods=['POST'])
+@jwt_required()
+def predict():
+    user_id = get_jwt_identity()
+    data = request.get_json()
 
+    # Call ML Service
+    result, confidence = predict_diabetes_risk(data)
+
+    if result is None:
+        return jsonify({"msg": "Prediction failed", "error": confidence}), 500
+
+    try:
+        # Save to Database
+        new_history = History(
+            user_id=user_id,
+            result=result,
+            probability=confidence,
+            input_snapshot=json.dumps(data) 
+        )
+        db.session.add(new_history)
+        db.session.commit()
+
+        return jsonify({
+            "msg": "Prediction successful",
+            "result": result,       
+            "probability": confidence
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Database error", "error": str(e)}), 500
+
+
+# ==========================================
+#  API BLUEPRINT (Logs, User Data)
+# ==========================================
 api_bp = Blueprint('api', __name__)
-
 
 @api_bp.route('/logs', methods=['POST'])
 @jwt_required()
 def add_log():
     current_user_id = get_jwt_identity()
-
     data = request.get_json()
 
     try:
@@ -69,6 +96,7 @@ def add_log():
     except ValueError:
         return jsonify({"msg": "Invalid date format. Use YYYY-MM-DD"}), 400
 
+    # Check if log exists for this day
     existing_log = Log.query.filter_by(user_id=current_user_id, log_date=log_date).first()
     if existing_log:
         return jsonify({"msg": "Log for this date already exists"}), 409
@@ -118,39 +146,3 @@ def get_logs():
         })
 
     return jsonify(result), 200
-=======
- # ML Route
-
-@auth_bp.route('/predict', methods=['POST'])
-@jwt_required() # Uzytkownik musi byc zalogowany
-def predict():
-
-    user_id = get_jwt_identity()
-    
-    data = request.get_json()
-
-    result, confidence = predict_diabetes_risk(data)
-
-    if result is None:
-        return jsonify({"msg": "Prediction failed", "error": confidence}), 500
-
-    try:
-        new_history = History(
-            user_id=user_id,
-            result=result,
-            probability=confidence,
-            input_snapshot=json.dumps(data) 
-        )
-        db.session.add(new_history)
-        db.session.commit()
-
-        return jsonify({
-            "msg": "Prediction successful",
-            "result": result,       
-            "probability": confidence
-        }), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Database error", "error": str(e)}), 500
->>>>>>> a9e0b9e (Finished backend ML logic)

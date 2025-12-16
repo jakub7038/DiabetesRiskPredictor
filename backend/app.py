@@ -3,12 +3,9 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from config import Config
 from models import db
-<<<<<<< HEAD
-from routes import auth_bp, api_bp
-=======
-from routes import auth_bp
+# RESOLUTION: We import api_bp (from Main) AND load_model (from You)
+from routes import auth_bp, api_bp 
 from ml_service import load_model
->>>>>>> a9e0b9e (Finished backend ML logic)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -21,16 +18,15 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 app.register_blueprint(auth_bp)
 app.register_blueprint(api_bp)
 
+# Create tables if they don't exist
 with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-<<<<<<< HEAD
-    app.run(debug=True, port=5000)
-
-=======
+    # RESOLUTION: We load the model before the app starts
     with app.app_context():
-        db.create_all()
+        print("🔄 Loading ML Model...")
         load_model() 
-    app.run(debug=True, port=5000)
->>>>>>> a9e0b9e (Finished backend ML logic)
+
+    # We use use_reloader=False to fix the Windows "WinError 10038" crash
+    app.run(debug=True, use_reloader=False, port=5000)
