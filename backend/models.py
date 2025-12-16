@@ -64,10 +64,9 @@ class User(db.Model):
 
     data = db.relationship('UserData', backref='user', uselist=False, cascade="all, delete-orphan")
 
-    logs = db.relationship('Log', backref='user', lazy=True)
+    logs = db.relationship('Log', backref='user', lazy=True, cascade="all, delete-orphan")
 
-    history = db.relationship('History', backref='user', lazy=True)
-
+    history = db.relationship('History', backref='user', lazy=True, cascade="all, delete-orphan")
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 

@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import json
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 _model = None
 _model_columns = None
@@ -40,8 +41,8 @@ def predict_diabetes_risk(data):
             return None, "Model failed to load"
 
     try:
-        input_df = pd.DataFrame(columns=_model_columns)
-        input_df.loc[0] = 0
+        input_df = pd.DataFrame(columns=_model_columns, dtype=float)
+        input_df.loc[0] = 0.0
 
         # Logika danych
         
@@ -101,3 +102,52 @@ def predict_diabetes_risk(data):
     except Exception as e:
         print(f"Prediction Error: {e}")
         return None, str(e)
+
+
+def analyze_risk_trend(history_records):
+
+    if not history_records or len(history_records) < 2:
+        return None
+
+    records = sorted(history_records, key=lambda x: x.created_at)
+
+    first_date = records[0].created_at
+
+    X = []
+    y = []
+
+    for record in records:
+        # upływ czasu od pierwszego pomiaru
+        delta = record.created_at - first_date
+        days_diff = delta.total_seconds() / (3600 * 24)
+
+        X.append([days_diff])
+        y.append(record.probability)
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    slope = model.coef_[0]
+
+    trend_line_values = model.predict(X)
+
+    last_day = X[-1][0]
+    future_day = last_day + 30
+    predicted_future_risk = model.predict([[future_day]])[0]
+    predicted_future_risk = max(0, min(100, predicted_future_risk))
+
+    return {
+        "slope": round(slope, 4),
+        "trend_direction": "increasing" if slope > 0 else "decreasing",
+        "trend_description": "Ryzyko rośnie" if slope > 0 else "Ryzyko maleje",
+        "current_risk": y[-1],
+        "predicted_risk_30d": round(predicted_future_risk, 2),
+        "history_points": [
+            {
+                "day": day[0],
+                "risk": risk,
+                "trend_value": round(trend_val, 2)
+            }
+            for day, risk, trend_val in zip(X, y, trend_line_values)
+        ]
+    }
