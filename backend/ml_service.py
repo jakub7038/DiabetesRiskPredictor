@@ -30,11 +30,8 @@ def calculate_age_category(age):
 
     return max(1, min(13, category))
 
+
 def predict_diabetes_risk(data):
-    """
-    data: Dictionary containing patient stats (from Frontend or DB).
-    Returns: (Result Class [0,1,2], Probability %)
-    """
     if _model is None:
         load_model()
         if _model is None:
@@ -44,57 +41,36 @@ def predict_diabetes_risk(data):
         input_df = pd.DataFrame(columns=_model_columns, dtype=float)
         input_df.loc[0] = 0.0
 
-        # Logika danych
-        
-        bmi_val = 25.0
-        if data.get('weight') and data.get('height'):
-            w = float(data['weight'])
-            h = float(data['height'])
-            # Wysokość w metrach
-            if h > 3: h = h / 100 
-            if h > 0: bmi_val = w / (h ** 2)
-        
-        # Logika alkoholu (HvyAlcoholConsump)
-        # 1 if Male > 14 drinks/week OR Female > 7 drinks/week, else 0
-        drinks = int(data.get('alcohol_drinks', 0) or 0)
-        sex = int(data.get('sex', 0) or 0) # 0 = Female, 1 = Male
-        
-        is_heavy_drinker = 0
-        if sex == 1 and drinks > 14: is_heavy_drinker = 1 
-        if sex == 0 and drinks > 7: is_heavy_drinker = 1
-        
-        raw_age = int(data.get('age', 30))
-        age_category = calculate_age_category(raw_age)
-
 
         mapper = {
-            'HighBP': int(data.get('high_bp', 0) or 0),
-            'HighChol': int(data.get('high_chol', 0) or 0),
-            'Stroke': int(data.get('stroke', 0) or 0),
-            'DiffWalk': int(data.get('diff_walk', 0) or 0),
-            'PhysActivity': int(data.get('physical_activity', 0) or 0),
-            'Sex': sex,
-            'HeartDiseaseorAttack': int(data.get('heart_disease', 0) or 0),
-            'Smoker': int(data.get('smoker', 0) or 0),
-            'Fruits': int(data.get('ate_fruit', 0) or 0),
-            'Veggies': int(data.get('ate_veggie', 0) or 0),
-            'HvyAlcoholConsump': is_heavy_drinker,
-            
-            'GenHlth': int(data.get('gen_hlth', 3)), # Scale 1-5
-            'PhysHlth': int(data.get('bad_physical_day', 0) or 0), # Days 0-30
-            'MentHlth': int(data.get('bad_mental_day', 0) or 0),   # Days 0-30
-            'BMI': float(bmi_val),
-            'Age': age_category
+            'HighBP': int(data.get('HighBP', 0)),
+            'HighChol': int(data.get('HighChol', 0)),
+            'Stroke': int(data.get('Stroke', 0)),
+            'DiffWalk': int(data.get('DiffWalk', 0)),
+            'PhysActivity': int(data.get('PhysActivity', 0)),
+            'Sex': int(data.get('Sex', 0)),
+            'HeartDiseaseorAttack': int(data.get('HeartDiseaseorAttack', 0)),
+            'Smoker': int(data.get('Smoker', 0)),
+            'Fruits': int(data.get('Fruits', 0)),
+            'Veggies': int(data.get('Veggies', 0)),
+            'HvyAlcoholConsump': int(data.get('HvyAlcoholConsump', 0)),
+
+            'GenHlth': int(data.get('GenHlth', 3)),
+            'PhysHlth': int(data.get('PhysHlth', 0)),
+            'MentHlth': int(data.get('MentHlth', 0)),
+
+            'BMI': float(data.get('BMI', 25.0)),
+
+            'Age': int(data.get('Age', 1))
         }
 
         for col, val in mapper.items():
             if col in input_df.columns:
                 input_df.at[0, col] = val
 
-        prediction = _model.predict(input_df)[0]        # 0, 1, or 2
-        probabilities = _model.predict_proba(input_df)[0] 
-        
-        # Konwersja numpy float na python float (inaczej błąd)
+        prediction = _model.predict(input_df)[0]
+        probabilities = _model.predict_proba(input_df)[0]
+
         confidence = float(round(max(probabilities) * 100, 2))
 
         return int(prediction), confidence

@@ -50,14 +50,19 @@ export const authService = {
 
   // --- PREDICTION (Jest w auth_bp, więc dajemy tutaj) ---
   predict: async (data: PredictionInput): Promise<PredictionResult> => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken'); 
     
+    const headers: HeadersInit = { 
+        'Content-Type': 'application/json' 
+    };
+
+    if (token && token !== "null" && token !== "undefined") {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${AUTH_URL}/predict`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Dodajemy JWT
-      },
+      headers: headers, 
       body: JSON.stringify(data),
     });
 
@@ -65,15 +70,18 @@ export const authService = {
     
     // Obsługa wygasłego tokena (401)
     if (response.status === 401) {
-       // Tutaj można wywołać logikę refresh tokena
        authService.logout();
        throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    }
+
+    if (response.status === 422) {
+       localStorage.removeItem('accessToken');
+       throw new Error("Błąd autoryzacji. Spróbuj ponownie.");
     }
 
     if (!response.ok) throw new Error(result.msg || 'Błąd predykcji');
     return result;
   },
-
   // Pomocnik do sprawdzania czy user jest zalogowany
   isAuthenticated: () => {
     return !!localStorage.getItem('accessToken');

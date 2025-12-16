@@ -5,10 +5,22 @@ TEST_EMAIL = "pred_test_user@example.com"
 TEST_PASSWORD = "password123"
 
 PAYLOAD = {
-    "sex": 1, "age": 30, "weight": 85.5, "height": 180.0, "alcohol_drinks": 2,
-    "high_bp": 0, "high_chol": 0, "stroke": 0, "diff_walk": 0, "physical_activity": 1,
-    "heart_disease": 0, "smoker": 0, "ate_fruit": 1, "ate_veggie": 1,
-    "gen_hlth": 2, "bad_physical_day": 1, "bad_mental_day": 2
+    "Age": 8,
+    "BMI": 22.22222222222222,
+    "DiffWalk": 0,
+    "Fruits": 0,
+    "GenHlth": 3,
+    "HighBP": 0,
+    "HighChol": 0,
+    "HvyAlcoholConsump": 0,
+    "MentHlth": 20,
+    "PhysActivity": 1,
+    "PhysHlth": 15,
+    "Sex": 0,
+    "Smoker": 1,
+    "Stroke": 0,
+    "Veggies": 0,
+    "HeartDiseaseorAttack": 0
 }
 
 def get_token():
@@ -20,14 +32,14 @@ def get_token():
 def test_guest():
     res = requests.post(f"{BASE_URL}/predict", json=PAYLOAD)
     if res.status_code == 200 and res.json().get('is_saved') is False:
-        print("gość działa")
+        print(res.json())
     else:
         print(f"{res.status_code}, {res.json().get('is_saved')})")
 
 def test_user(token):
     res = requests.post(f"{BASE_URL}/predict", json=PAYLOAD, headers={"Authorization": f"Bearer {token}"})
     if res.status_code == 200 and res.json().get('is_saved') is True:
-        print("User działa")
+        print(res.json())
     else:
         print(f" {res.status_code}, {res.json().get('is_saved')})")
 

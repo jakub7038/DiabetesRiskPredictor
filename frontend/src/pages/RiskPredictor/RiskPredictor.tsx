@@ -271,7 +271,7 @@ const RiskPredictor = () => {
 
             const result = await authService.predict(predictionData);
 
-            const percentage = (result.probability * 100).toFixed(1);
+            const percentage = result.probability.toFixed(1);
             const diabetes_result = result.result
 
             if (diabetes_result === 0) alert(`Analiza zakończona!\nTwój wynik to: BRAK CUKRZYCY GRATULACJE \nPrawdopodobieństwo: ${percentage}%`);
