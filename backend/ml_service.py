@@ -21,27 +21,13 @@ def load_model():
         print("✅ ML Model loaded successfully.")
     else:
         print(f"❌ Error: Model files not found. Expected at: {model_path}")
-        
+
 def calculate_age_category(age):
-    """
-    Maps raw age (e.g., 62) to the 1-13 scale required by the model.
-    18-24 -> 1, 60-64 -> 9, >80 -> 13
-    """
     age = int(age)
-    if age < 18: return 1
-    if 18 <= age <= 24: return 1
-    if 25 <= age <= 29: return 2
-    if 30 <= age <= 34: return 3
-    if 35 <= age <= 39: return 4
-    if 40 <= age <= 44: return 5
-    if 45 <= age <= 49: return 6
-    if 50 <= age <= 54: return 7
-    if 55 <= age <= 59: return 8
-    if 60 <= age <= 64: return 9
-    if 65 <= age <= 69: return 10
-    if 70 <= age <= 74: return 11
-    if 75 <= age <= 79: return 12
-    return 13 # 80+
+
+    category = ((age - 25) // 5) + 2
+
+    return max(1, min(13, category))
 
 def predict_diabetes_risk(data):
     """

@@ -92,7 +92,7 @@ print(f"\n🏆 Best Model: {best_model_name} ({round(best_accuracy * 100, 2)}%)"
 import joblib
 
 print(f"Saving {best_model_name}...")
-joblib.dump(best_model_object, 'diabetes_model.pkl')
-joblib.dump(X.columns.tolist(), 'model_columns.pkl')
+joblib.dump(best_model_object, '../diabetes_model.pkl')
+joblib.dump(X.columns.tolist(), '../model_columns.pkl')
 
 print("✅ SUCCESS! 'diabetes_model.pkl' and 'model_columns.pkl' created.")
