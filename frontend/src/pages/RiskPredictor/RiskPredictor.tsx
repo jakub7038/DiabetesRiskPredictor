@@ -182,7 +182,7 @@ const STEPS: StepConfig[] = [
                 ]
             },
             {
-                id: 'GenHlth',
+                id: 'HvyAlcoholConsump',
                 text: "Czy spożywasz dużo alkoholu ?",
                 type: "select",
                 options: [

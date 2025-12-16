@@ -2,9 +2,13 @@ import { useState } from 'react';
 import AuthWrapper from '@/components/layout/AuthWrapper/AuthWrapper';
 import Input from '@/components/ui/Input/Input';
 import Button from '@/components/ui/Button/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '@/api/authService';
 
 const Login = () => {
+  const navigate = useNavigate(); // Hook do nawigacji
+  const [error, setError] = useState<string | null>(null); // Stan na błędy
+  const [isLoading, setIsLoading] = useState(false); // Stan ładowania
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -16,11 +20,28 @@ const Login = () => {
       ...prev,
       [name]: value 
     }));
+    if (error) setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Dane do wysłania:', formData);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 1. Wywołanie logowania
+      await authService.login(formData);
+      
+      // 2. Sukces - przekierowanie (np. do panelu głównego lub ankiety)
+      navigate('/konto'); 
+      
+    } catch (err: any) {
+      // 3. Obsługa błędu
+      console.error(err);
+      setError("Nieprawidłowy email lub hasło.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,7 +68,7 @@ const Login = () => {
 
             <div style={{ marginTop: '20px' }}>
             <Button size="lg" variant="primary">
-                Zaloguj się
+                {isLoading ? 'Logowanie...' : 'Zaloguj się'}
             </Button> 
             </div>
 

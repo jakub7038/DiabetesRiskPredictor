@@ -2,9 +2,14 @@ import { useState } from 'react';
 import AuthWrapper from '@/components/layout/AuthWrapper/AuthWrapper';
 import Input from '@/components/ui/Input/Input';
 import Button from '@/components/ui/Button/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '@/api/authService';
 
 const Register = () => {
+    const navigate = useNavigate();
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -16,13 +21,37 @@ const Register = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Walidacja frontendowa
         if (formData.password !== formData.confirmPassword) {
-            alert("Hasła nie są takie same!");
+            setError("Hasła nie są takie same!");
             return;
         }
-        console.log('Rejestracja:', formData);
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // Wysyłamy tylko email i hasło (bez confirmPassword)
+            await authService.register({
+                email: formData.email,
+                password: formData.password
+            });
+
+            // Sukces
+            alert("Konto zostało założone! Możesz się teraz zalogować.");
+            navigate('/logowanie'); // Przekierowanie do logowania
+
+        } catch (err: any) {
+            console.error(err);
+            // Jeśli backend zwraca konkretny komunikat (np. "User already exists"), warto go wyświetlić
+            // Zakładając, że authService rzuca Error z wiadomością:
+            setError(err.message || "Wystąpił błąd podczas rejestracji.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
