@@ -1,5 +1,5 @@
 from models import db, User
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 
 def register_user(email, password):
 
@@ -26,8 +26,11 @@ def login_user(email, password):
 
     if user and user.check_password(password):
         access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
+
         return {
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "user_id": user.id,
             "email": user.email
         }
