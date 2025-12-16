@@ -1,15 +1,25 @@
 from flask import Blueprint, request, jsonify
+<<<<<<< HEAD
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from models import db, UserData, Log, History, User
 from auth import register_user, login_user
 from datetime import datetime, timezone
+=======
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import json
+
+from auth import register_user, login_user
+from ml_service import predict_diabetes_risk
+from models import db, History
+>>>>>>> a9e0b9e (Finished backend ML logic)
 
 auth_bp = Blueprint('auth', __name__)
+
+#  Auth Route
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    
     success, message = register_user(data.get('email'), data.get('password'))
 
     if success:
@@ -20,7 +30,6 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    
     result = login_user(data.get('email'), data.get('password'))
 
     if result:
@@ -31,6 +40,7 @@ def login():
     
     return jsonify({"msg": "Bad email or password"}), 401
 
+<<<<<<< HEAD
 
 @auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
@@ -108,3 +118,39 @@ def get_logs():
         })
 
     return jsonify(result), 200
+=======
+ # ML Route
+
+@auth_bp.route('/predict', methods=['POST'])
+@jwt_required() # Uzytkownik musi byc zalogowany
+def predict():
+
+    user_id = get_jwt_identity()
+    
+    data = request.get_json()
+
+    result, confidence = predict_diabetes_risk(data)
+
+    if result is None:
+        return jsonify({"msg": "Prediction failed", "error": confidence}), 500
+
+    try:
+        new_history = History(
+            user_id=user_id,
+            result=result,
+            probability=confidence,
+            input_snapshot=json.dumps(data) 
+        )
+        db.session.add(new_history)
+        db.session.commit()
+
+        return jsonify({
+            "msg": "Prediction successful",
+            "result": result,       
+            "probability": confidence
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Database error", "error": str(e)}), 500
+>>>>>>> a9e0b9e (Finished backend ML logic)
