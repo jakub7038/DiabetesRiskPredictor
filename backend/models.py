@@ -1,3 +1,51 @@
+"""
+
+USERS
+id	INTEGER/SERIAL PK
+email VARCHAR(255)
+password_hash VARCHAR(255)
+created_at TIMESTAMP
+
+USER DATA
+id	INTEGER/SERIAL PK
+user_id	FK - users (1:1)
+Sex	Bool
+Age	Int
+HighBP Bool
+HighChol Bool
+CholCheck Bool
+Smoker Bool
+Stroke Bool
+HeartDisease Bool
+AnyHealthcare Bool
+NoDocbcCost	Bool
+DiffWalk Bool
+
+
+LOGS (te dane sie licza dzisiejszego dnia)
+id	INTEGER/SERIAL PK
+user_id	FK - users (N:1)
+log_date Date
+ate_fruit Bool
+ate_veggie Bool
+physical_activity Bool
+alcohol_drinks Int
+bad_mental_day Bool
+bad_physical_day Bool
+weight Decimal
+height Decimal
+
+HISTORY
+id INTEGER/SERIAL PK
+user_id FK - users (N:1)
+created_at TIMESTAMP
+result INTEGER
+probability FLOAT
+input_snapshot JSON
+
+
+"""
+
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
@@ -16,10 +64,9 @@ class User(db.Model):
 
     data = db.relationship('UserData', backref='user', uselist=False, cascade="all, delete-orphan")
 
-    logs = db.relationship('Log', backref='user', lazy=True)
+    logs = db.relationship('Log', backref='user', lazy=True, cascade="all, delete-orphan")
 
-    history = db.relationship('History', backref='user', lazy=True)
-
+    history = db.relationship('History', backref='user', lazy=True, cascade="all, delete-orphan")
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 

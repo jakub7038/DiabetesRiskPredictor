@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import json
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 _model = None
 _model_columns = None
@@ -21,27 +22,13 @@ def load_model():
         print("✅ ML Model loaded successfully.")
     else:
         print(f"❌ Error: Model files not found. Expected at: {model_path}")
-        
+
 def calculate_age_category(age):
-    """
-    Maps raw age (e.g., 62) to the 1-13 scale required by the model.
-    18-24 -> 1, 60-64 -> 9, >80 -> 13
-    """
     age = int(age)
-    if age < 18: return 1
-    if 18 <= age <= 24: return 1
-    if 25 <= age <= 29: return 2
-    if 30 <= age <= 34: return 3
-    if 35 <= age <= 39: return 4
-    if 40 <= age <= 44: return 5
-    if 45 <= age <= 49: return 6
-    if 50 <= age <= 54: return 7
-    if 55 <= age <= 59: return 8
-    if 60 <= age <= 64: return 9
-    if 65 <= age <= 69: return 10
-    if 70 <= age <= 74: return 11
-    if 75 <= age <= 79: return 12
-    return 13 # 80+
+
+    category = ((age - 25) // 5) + 2
+
+    return max(1, min(13, category))
 
 def predict_diabetes_risk(data):
     """
@@ -54,8 +41,8 @@ def predict_diabetes_risk(data):
             return None, "Model failed to load"
 
     try:
-        input_df = pd.DataFrame(columns=_model_columns)
-        input_df.loc[0] = 0
+        input_df = pd.DataFrame(columns=_model_columns, dtype=float)
+        input_df.loc[0] = 0.0
 
         # Logika danych
         
@@ -115,3 +102,52 @@ def predict_diabetes_risk(data):
     except Exception as e:
         print(f"Prediction Error: {e}")
         return None, str(e)
+
+
+def analyze_risk_trend(history_records):
+
+    if not history_records or len(history_records) < 2:
+        return None
+
+    records = sorted(history_records, key=lambda x: x.created_at)
+
+    first_date = records[0].created_at
+
+    X = []
+    y = []
+
+    for record in records:
+        # upływ czasu od pierwszego pomiaru
+        delta = record.created_at - first_date
+        days_diff = delta.total_seconds() / (3600 * 24)
+
+        X.append([days_diff])
+        y.append(record.probability)
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    slope = model.coef_[0]
+
+    trend_line_values = model.predict(X)
+
+    last_day = X[-1][0]
+    future_day = last_day + 30
+    predicted_future_risk = model.predict([[future_day]])[0]
+    predicted_future_risk = max(0, min(100, predicted_future_risk))
+
+    return {
+        "slope": round(slope, 4),
+        "trend_direction": "increasing" if slope > 0 else "decreasing",
+        "trend_description": "Ryzyko rośnie" if slope > 0 else "Ryzyko maleje",
+        "current_risk": y[-1],
+        "predicted_risk_30d": round(predicted_future_risk, 2),
+        "history_points": [
+            {
+                "day": day[0],
+                "risk": risk,
+                "trend_value": round(trend_val, 2)
+            }
+            for day, risk, trend_val in zip(X, y, trend_line_values)
+        ]
+    }

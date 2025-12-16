@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from models import db, UserData, Log, History, User
 from auth import register_user, login_user
-from ml_service import predict_diabetes_risk
+from ml_service import predict_diabetes_risk, analyze_risk_trend
 
 # ==========================================
 #  AUTH BLUEPRINT (Register, Login, Predict)
@@ -44,37 +44,38 @@ def refresh():
 
 # --- ML PREDICTION ROUTE ---
 @auth_bp.route('/predict', methods=['POST'])
-@jwt_required()
+@jwt_required(optional=True)
 def predict():
     user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Call ML Service
     result, confidence = predict_diabetes_risk(data)
 
     if result is None:
         return jsonify({"msg": "Prediction failed", "error": confidence}), 500
 
-    try:
-        # Save to Database
-        new_history = History(
-            user_id=user_id,
-            result=result,
-            probability=confidence,
-            input_snapshot=json.dumps(data) 
-        )
-        db.session.add(new_history)
-        db.session.commit()
+    if user_id:
+        try:
+            new_history = History(
+                user_id=user_id,
+                result=result,
+                probability=confidence,
+                input_snapshot=json.dumps(data)
+            )
+            db.session.add(new_history)
+            db.session.commit()
+            print(f"✅ Saved prediction for user {user_id}")
 
-        return jsonify({
-            "msg": "Prediction successful",
-            "result": result,       
-            "probability": confidence
-        }), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"msg": "Prediction done but database save failed", "error": str(e)}), 500
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Database error", "error": str(e)}), 500
+    return jsonify({
+        "msg": "Prediction successful",
+        "result": result,
+        "probability": confidence,
+        "is_saved": bool(user_id)
+    }), 200
 
 
 # ==========================================
@@ -146,3 +147,28 @@ def get_logs():
         })
 
     return jsonify(result), 200
+
+@api_bp.route('/trends', methods=['GET'])
+@jwt_required()
+def get_trends():
+    user_id = get_jwt_identity()
+
+    # Pobieramy całą historię predykcji tego użytkownika
+    user_history = History.query.filter_by(user_id=user_id).all()
+
+    if not user_history:
+        return jsonify({"msg": "No history found"}), 404
+
+    # Analiza trendu
+    trend_data = analyze_risk_trend(user_history)
+
+    if trend_data is None:
+        return jsonify({
+            "msg": "Not enough data points for regression (need at least 2)",
+            "data": []
+        }), 200 # Zwracamy 200, bo to nie błąd serwera, po prostu brak danych do trendu
+
+    return jsonify({
+        "msg": "Trend analysis successful",
+        "data": trend_data
+    }), 200
