@@ -325,7 +325,7 @@ const RiskPredictor = () => {
 
                     <div className={styles.questionsList}>
                         {currentStep.questions.map((question) => (
-                            <div key={question.id} className={styles.singleQuestionBlock}>
+                            <div key={question.id} className={styles.QuestionBlock}>
 
                                 <h3 className={styles.questionText}>{question.text}</h3>
 

@@ -24,13 +24,13 @@ export interface PredictionInput {
 
 export interface PredictionResult {
   msg: string;
-  result: number; // np. 0 lub 1
-  probability: number; // np. 0.85
+  result: number; 
+  probability: number; 
 }
 
 export interface DailyLog {
   id?: number;
-  date?: string; // YYYY-MM-DD
+  date?: string; 
   ate_fruit?: boolean;
   ate_veggie?: boolean;
   physical_activity?: boolean;

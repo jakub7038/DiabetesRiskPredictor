@@ -36,6 +36,10 @@ const Header = () => {
             title: "Oblicz ryzyko",
             visibleLinks: ["/logowanie", "/rejestracja"],
         },
+        "/konto": {
+            title: "Konto",
+            visibleLinks: ["/predyktor-ryzyka"]
+        }
     };
 
 

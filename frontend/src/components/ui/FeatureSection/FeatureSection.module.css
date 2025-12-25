@@ -1,9 +1,9 @@
 
 .section{
+    min-height: 33vh;
     width: 33vw;
-    color: black;
-
     margin: 50px;
+    color: black;
 }
 
 .title{

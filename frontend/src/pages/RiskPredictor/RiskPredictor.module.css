@@ -21,6 +21,10 @@
     margin-bottom: 30px;
 }
 
+.QuestionBlock {
+    margin-bottom: 30px;
+}
+
 .progressLine {
     position: absolute;
     top: 15px;
@@ -206,7 +210,7 @@
 .numberInputWrapper {
     display: flex;
     align-items: center;
-    max-width: 300px; 
+    width: 100%; 
     border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: border-color 0.2s;
