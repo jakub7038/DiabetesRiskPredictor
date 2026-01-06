@@ -16,16 +16,30 @@ export interface LoginResponse {
 }
 
 export interface PredictionInput {
-  // Tutaj wpisz pola, których wymaga Twoja funkcja predict_diabetes_risk
-  // np. age, gender, bmi, bp, etc.
   [key: string]: any; 
 }
 
+export interface ModelPrediction {
+  prediction: number;
+  probabilities: {
+    class_0: number;
+    class_1: number;
+    class_2: number;
+  };
+  confidence: number;
+}
 
 export interface PredictionResult {
   msg: string;
-  result: number; 
-  probability: number; 
+  predictions: {
+    logistic?: ModelPrediction;
+    random_forest?: ModelPrediction;
+    gradient_boost?: ModelPrediction;
+  };
+  is_saved: boolean;
+  // Stare pola dla backward compatibility (opcjonalne)
+  result?: number; 
+  probability?: number; 
 }
 
 export interface DailyLog {

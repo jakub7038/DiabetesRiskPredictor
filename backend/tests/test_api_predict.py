@@ -3,25 +3,46 @@ import requests
 BASE_URL = "http://127.0.0.1:5000"
 TEST_EMAIL = "pred_test_user@example.com"
 TEST_PASSWORD = "password123"
+"""
+PAYLOAD = {
+    "Age": 4,               # ~30-34 lata
+    "BMI": 21.5,            # Norma
+    "DiffWalk": 0,          # Brak problemów z chodzeniem
+    "Fruits": 1,            # Je owoce
+    "GenHlth": 2,           # Bardzo dobre zdrowie
+    "HighBP": 0,            # Brak nadciśnienia
+    "HighChol": 0,          # Brak cholesterolu
+    "HvyAlcoholConsump": 0,
+    "MentHlth": 0,          # Dobre zdrowie psychiczne
+    "PhysActivity": 1,      # Aktywny
+    "PhysHlth": 0,          # Dobre zdrowie fizyczne
+    "Sex": 0,
+    "Smoker": 0,
+    "Stroke": 0,
+    "Veggies": 1,
+    "HeartDiseaseorAttack": 0
+}
+"""
 
 PAYLOAD = {
-    "Age": 8,
-    "BMI": 22.22222222222222,
-    "DiffWalk": 0,
+    "Age": 10,
+    "BMI": 38.5,
+    "DiffWalk": 1,
     "Fruits": 0,
-    "GenHlth": 3,
-    "HighBP": 0,
-    "HighChol": 0,
+    "GenHlth": 5,
+    "HighBP": 1,
+    "HighChol": 1,
     "HvyAlcoholConsump": 0,
-    "MentHlth": 20,
-    "PhysActivity": 1,
-    "PhysHlth": 15,
-    "Sex": 0,
+    "MentHlth": 5,
+    "PhysActivity": 0,
+    "PhysHlth": 25,
+    "Sex": 1,
     "Smoker": 1,
     "Stroke": 0,
     "Veggies": 0,
-    "HeartDiseaseorAttack": 0
+    "HeartDiseaseorAttack": 1
 }
+
 
 def get_token():
     auth = {"email": TEST_EMAIL, "password": TEST_PASSWORD}
@@ -31,22 +52,23 @@ def get_token():
 
 def test_guest():
     res = requests.post(f"{BASE_URL}/predict", json=PAYLOAD)
-    if res.status_code == 200 and res.json().get('is_saved') is False:
-        print(res.json())
-    else:
-        print(f"{res.status_code}, {res.json().get('is_saved')})")
+    print(f"Status: {res.status_code}")
+    print(res.json())
 
 def test_user(token):
-    res = requests.post(f"{BASE_URL}/predict", json=PAYLOAD, headers={"Authorization": f"Bearer {token}"})
-    if res.status_code == 200 and res.json().get('is_saved') is True:
-        print(res.json())
-    else:
-        print(f" {res.status_code}, {res.json().get('is_saved')})")
+    res = requests.post(
+        f"{BASE_URL}/predict",
+        json=PAYLOAD,
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    print(f"Status: {res.status_code}")
+    print(res.json())
 
 if __name__ == "__main__":
     test_guest()
+
     token = get_token()
     if token:
         test_user(token)
     else:
-        print("Login Failed")
+        print("Błąd logowania")

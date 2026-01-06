@@ -233,6 +233,28 @@ const RiskPredictor = () => {
         return ans !== undefined && ans !== '';
     });
 
+    const formatPredictions = (predictions: any): string => {
+        let message = "WYNIKI ANALIZY:\n\n";
+
+        const modelNames: Record<string, string> = {
+            'logistic': 'Logistic Regression',
+            'random_forest': 'Random Forest',
+            'gradient_boost': 'Gradient Boosting'
+        };
+
+        for (const [modelKey, modelData] of Object.entries(predictions)) {
+            if (!modelData) continue;
+
+            const data = modelData as any;
+            message += `${modelNames[modelKey]}:\n`;
+            message += `Class 0: ${data.probabilities.class_0}%\n`;
+            message += `Class 1: ${data.probabilities.class_1}%\n`;
+            message += `Class 2: ${data.probabilities.class_2}%\n\n`;
+        }
+
+        return message;
+    };
+
     const handleSubmit = async () => {
         setIsLoading(true);
         try {
@@ -271,12 +293,19 @@ const RiskPredictor = () => {
 
             const result = await authService.predict(predictionData);
 
-            const percentage = result.probability.toFixed(1);
-            const diabetes_result = result.result
+            // Teraz result.predictions zawiera wszystkie 3 modele
+            if (result.predictions) {
+                const formattedMessage = formatPredictions(result.predictions);
+                alert(formattedMessage);
+            } else {
+                // Fallback na starą strukturę (jeśli backend jeszcze nie zaktualizowany)
+                const percentage = result.probability?.toFixed(1) || '0';
+                const diabetes_result = result.result;
 
-            if (diabetes_result === 0) alert(`Analiza zakończona!\nTwój wynik to: BRAK CUKRZYCY GRATULACJE \nPrawdopodobieństwo: ${percentage}%`);
-            else if (diabetes_result === 1) alert(`Analiza zakończona!\nTwój wynik to: STAN PRZEDCUKRZYCOWY \nPrawdopodobieństwo: ${percentage}%`);
-            else alert(`Analiza zakończona!\nTwój wynik to: CUKRZYCA !!!!!!!!!@!!!! \nPrawdopodobieństwo: ${percentage}%`);
+                if (diabetes_result === 0) alert(`Analiza zakończona!\nTwój wynik to: BRAK CUKRZYCY GRATULACJE \nPrawdopodobieństwo: ${percentage}%`);
+                else if (diabetes_result === 1) alert(`Analiza zakończona!\nTwój wynik to: STAN PRZEDCUKRZYCOWY \nPrawdopodobieństwo: ${percentage}%`);
+                else alert(`Analiza zakończona!\nTwój wynik to: CUKRZYCA !!!!!!!!!@!!!! \nPrawdopodobieństwo: ${percentage}%`);
+            }
 
             // navigate('/wynik', { state: { result } });
 
@@ -381,9 +410,9 @@ const RiskPredictor = () => {
                             <button
                                 className={styles.submitBtn}
                                 onClick={handleSubmit}
-                                disabled={!allQuestionsAnswered}
+                                disabled={!allQuestionsAnswered || isLoading}
                             >
-                                Zakończ i wyślij
+                                {isLoading ? 'Analizowanie...' : 'Zakończ i wyślij'}
                             </button>
                         ) : (
                             <button

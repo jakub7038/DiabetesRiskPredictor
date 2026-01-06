@@ -49,22 +49,30 @@ def predict():
     user_id = get_jwt_identity()
     data = request.get_json()
 
-    result, confidence = predict_diabetes_risk(data)
+    predictions, error = predict_diabetes_risk(data)
 
-    if result is None:
-        return jsonify({"msg": "Prediction failed", "error": confidence}), 500
+    if predictions is None:
+        return jsonify({"msg": "Prediction failed", "error": error}), 500
 
     if user_id:
         try:
-            new_history = History(
-                user_id=user_id,
-                result=result,
-                probability=confidence,
-                input_snapshot=json.dumps(data)
-            )
-            db.session.add(new_history)
+            # Zapisujemy wszystkie 3 predykcje jako osobne rekordy
+            for model_name, pred_data in predictions.items():
+                if pred_data is not None:
+                    new_history = History(
+                        user_id=user_id,
+                        result=pred_data['prediction'],
+                        probability=pred_data['confidence'],
+                        input_snapshot=json.dumps({
+                            'input_data': data,
+                            'model': model_name,
+                            'all_probabilities': pred_data['probabilities']
+                        })
+                    )
+                    db.session.add(new_history)
+
             db.session.commit()
-            print(f"✅ Saved prediction for user {user_id}")
+            print(f"✅ Saved predictions for user {user_id}")
 
         except Exception as e:
             db.session.rollback()
@@ -72,8 +80,7 @@ def predict():
 
     return jsonify({
         "msg": "Prediction successful",
-        "result": result,
-        "probability": confidence,
+        "predictions": predictions,
         "is_saved": bool(user_id)
     }), 200
 

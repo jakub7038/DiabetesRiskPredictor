@@ -55,9 +55,7 @@ models = {
 }
 
 results = {}
-best_model_name = ""
-best_accuracy = 0
-best_model_object = None
+trained_models = {}
 
 kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
@@ -73,26 +71,41 @@ for name, model in models.items():
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     results[name] = acc
+    trained_models[name] = model
 
     end_time = time.time()
     print(f"  Time: {round(end_time - start_time, 2)}s")
     print(f"  Accuracy: {round(acc * 100, 2)}%")
 
+print("\n=== FINAL RESULTS ===")
+best_accuracy = 0
+best_model_name = ""
+trained_models = {}
+
+for name, acc in results.items():
+    print(f"{name}: {round(acc * 100, 2)}%")
+    trained_models[name] = models[name]
     if acc > best_accuracy:
         best_accuracy = acc
         best_model_name = name
-        best_model_object = model
-
-print("\n=== FINAL RESULTS ===")
-for name, acc in results.items():
-    print(f"{name}: {round(acc * 100, 2)}%")
 
 print(f"\n🏆 Best Model: {best_model_name} ({round(best_accuracy * 100, 2)}%)")
 
-import joblib
+# Zapisujemy wszystkie 3 modele osobno
+print("\nSaving all models...")
 
-print(f"Saving {best_model_name}...")
-joblib.dump(best_model_object, '../diabetes_model.pkl')
+model_filenames = {
+    "Logistic Regression": '../diabetes_model_logistic.pkl',
+    "Random Forest": '../diabetes_model_rf.pkl',
+    "XGBoost (Gradient Boosting)": '../diabetes_model_gb.pkl'
+}
+
+for name, model in trained_models.items():
+    filename = model_filenames[name]
+    joblib.dump(model, filename)
+    print(f"✅ Saved: {filename}")
+
 joblib.dump(X.columns.tolist(), '../model_columns.pkl')
+print("✅ Saved: ../model_columns.pkl")
 
-print("✅ SUCCESS! 'diabetes_model.pkl' and 'model_columns.pkl' created.")
+print("\n✅ SUCCESS! All 3 models saved")
