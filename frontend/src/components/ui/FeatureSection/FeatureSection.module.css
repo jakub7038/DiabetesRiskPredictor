@@ -1,14 +1,92 @@
-
-.section{
-    min-height: 33vh;
-    width: 33vw;
-    margin: 50px;
-    color: black;
+/* components/ui/FeatureSection/FeatureSection.module.css */
+.section {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    padding: 4rem 2rem;
+    width: 1000px;
+    /* height: 33vh;  */
+    margin: 0 auto;
 }
 
-.title{
-    color: var(--color-secondary);
-    text-transform: uppercase;
-    font-weight: bold;
+/* Wersja mobilna - kolumna */
+@media (max-width: 768px) {
+    .section {
+        flex-direction: column;
+        padding: 2rem 1rem;
+        gap: 2rem;
+    }
+}
+
+/* Klasa do odwracania kolejności (Zig-Zag) */
+.reversed {
+    flex-direction: row-reverse;
+}
+
+/* Na mobilu zawsze obrazek nad lub pod tekstem w tej samej kolejności */
+@media (max-width: 768px) {
+    .reversed {
+        flex-direction: column;
+    }
+}
+
+.content {
+    flex: 1;
+}
+
+.title {
     font-size: 2rem;
+    color: #2c3e50; /* Ciemny granat - wygląda profesjonalnie */
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #4a5568;
+}
+
+/* Style dla list wewnątrz sekcji */
+.description ul {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.description li {
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+}
+
+.description strong {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+/* Opcjonalne: Styl dla "kart" z krokami */
+.stepCard {
+    background: #f7fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #3182ce; /* Niebieski pasek */
+}
+
+.imgContainer {
+    flex: 1;
+    height: 100%;     
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.img {
+    max-height: 400px;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    border-radius: 10px;
 }
