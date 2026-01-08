@@ -3,24 +3,44 @@ import pandas as pd
 import os
 import json
 import numpy as np
+import shap
 from sklearn.linear_model import LinearRegression
 
-# Zmiana: przechowujemy 3 modele zamiast jednego
+# --- KONFIGURACJA GEMINI (Darmowe API) ---
+try:
+    import google.generativeai as genai
+
+    # Pobieramy klucz z .env
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+    if GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+        _gemini_available = True
+    else:
+        _gemini_available = False
+        print("⚠️ Warning: GEMINI_API_KEY not found in environment variables.")
+
+except ImportError:
+    _gemini_available = False
+    print("⚠️ Warning: google-generativeai library not installed.")
+
+# --- ZMIENNE GLOBALNE ---
 _models = {
     'logistic': None,
     'random_forest': None,
     'gradient_boost': None
 }
 _model_columns = None
+_shap_explainer = None
 
 
 def load_model():
-    """Loads all three model files from the backend folder."""
+    """Ładuje modele ML oraz kolumny treningowe przy starcie aplikacji."""
     global _models, _model_columns
 
     base_path = os.path.dirname(__file__)
 
-    # Ładujemy 3 różne modele
+    # Ścieżki do plików modeli
     model_files = {
         'logistic': 'diabetes_model_logistic.pkl',
         'random_forest': 'diabetes_model_rf.pkl',
@@ -47,46 +67,109 @@ def load_model():
 
     if loaded_count == 0:
         print("❌ Error: No model files loaded!")
-    else:
-        print(f"✅ {loaded_count}/3 ML Models loaded successfully.")
 
 
-def calculate_age_category(age):
-    age = int(age)
-    category = ((age - 25) // 5) + 2
-    return max(1, min(13, category))
+def get_shap_explanation(model, input_df):
+    """Oblicza wpływ cech na wynik przy użyciu SHAP dla modelu Random Forest."""
+    global _shap_explainer
+
+    try:
+        if _shap_explainer is None:
+            # TreeExplainer jest bardzo szybki dla modeli drzewiastych
+            _shap_explainer = shap.TreeExplainer(model)
+
+        shap_values = _shap_explainer.shap_values(input_df, check_additivity=False)
+
+        # Obsługa formatu wyjścia SHAP
+        vals = shap_values[1] if isinstance(shap_values, list) and len(shap_values) > 1 else shap_values
+
+        if isinstance(vals, list):
+            vals = vals[-1]
+
+        values_array = vals[0] if len(vals.shape) > 1 else vals
+        feature_names = input_df.columns.tolist()
+
+        importance_dict = {name: float(val) for name, val in zip(feature_names, values_array)}
+
+        # Sortujemy cechy
+        sorted_features = sorted(importance_dict.items(), key=lambda item: item[1], reverse=True)
+
+        risk_factors = [f"{k}" for k, v in sorted_features[:3] if v > 0]
+        protective_factors = [f"{k}" for k, v in sorted_features[-3:] if v < 0]
+
+        return risk_factors, protective_factors
+
+    except Exception as e:
+        print(f"❌ SHAP Error: {e}")
+        return [], []
 
 
-def predict_diabetes_risk(data):
-    """Wykonuje predykcję używając wszystkich 3 modeli i zwraca wszystkie wyniki."""
+def generate_llm_advice(user_data, risk_prob, risk_factors):
+    """Generuje poradę tekstową przy użyciu Google Gemini."""
+    if not _gemini_available:
+        return None
 
-    # Sprawdzamy czy modele są załadowane
+    prompt = f"""
+    Jesteś asystentem medycznym. Użytkownik przesłał dane zdrowotne.
+
+    DANE PACJENTA:
+    - BMI: {user_data.get('BMI')}
+    - Aktywność fizyczna: {'Tak' if user_data.get('PhysActivity') else 'Nie'}
+    - Palenie: {'Tak' if user_data.get('Smoker') else 'Nie'}
+    - Wiek (kategoria 1-13): {user_data.get('Age')}
+
+    WYNIKI AI (Random Forest):
+    - Ryzyko cukrzycy: {risk_prob}%
+    - Główne czynniki podnoszące ryzyko (wg SHAP): {', '.join(risk_factors)}
+
+    ZADANIE:
+    Napisz 3 krótkie, konkretne zalecenia dla tej osoby. 
+    Odnieś się do czynników ryzyka wskazanych przez SHAP. Bądź empatyczny, ale rzeczowy.
+    Nie używaj wstępów typu "Oto zalecenia", po prostu wypunktuj.
+    """
+
+    try:
+        # Używamy darmowego modelu Gemini Pro
+        model = genai.GenerativeModel('models/gemini-flash-latest')
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"❌ Gemini Error: {e}")
+        return None
+
+
+def predict_diabetes_risk(data, is_authenticated=False):
+    """Główna funkcja predykcji (ML + SHAP + Gemini)."""
+
     if all(model is None for model in _models.values()):
         load_model()
         if all(model is None for model in _models.values()):
             return None, "All models failed to load"
 
     try:
-        # Przygotowanie danych wejściowych
+        # 1. Przygotowanie DataFrame
         input_df = pd.DataFrame(columns=_model_columns, dtype=float)
         input_df.loc[0] = 0.0
 
         mapper = {
             'HighBP': int(data.get('HighBP', 0)),
             'HighChol': int(data.get('HighChol', 0)),
-            'Stroke': int(data.get('Stroke', 0)),
-            'DiffWalk': int(data.get('DiffWalk', 0)),
-            'PhysActivity': int(data.get('PhysActivity', 0)),
-            'Sex': int(data.get('Sex', 0)),
-            'HeartDiseaseorAttack': int(data.get('HeartDiseaseorAttack', 0)),
+            'CholCheck': int(data.get('CholCheck', 1)),
+            'BMI': float(data.get('BMI', 25.0)),
             'Smoker': int(data.get('Smoker', 0)),
+            'Stroke': int(data.get('Stroke', 0)),
+            'HeartDiseaseorAttack': int(data.get('HeartDiseaseorAttack', 0)),
+            'PhysActivity': int(data.get('PhysActivity', 0)),
             'Fruits': int(data.get('Fruits', 0)),
             'Veggies': int(data.get('Veggies', 0)),
             'HvyAlcoholConsump': int(data.get('HvyAlcoholConsump', 0)),
+            'AnyHealthcare': int(data.get('AnyHealthcare', 1)),
+            'NoDocbcCost': int(data.get('NoDocbcCost', 0)),
             'GenHlth': int(data.get('GenHlth', 3)),
-            'PhysHlth': int(data.get('PhysHlth', 0)),
             'MentHlth': int(data.get('MentHlth', 0)),
-            'BMI': float(data.get('BMI', 25.0)),
+            'PhysHlth': int(data.get('PhysHlth', 0)),
+            'DiffWalk': int(data.get('DiffWalk', 0)),
+            'Sex': int(data.get('Sex', 0)),
             'Age': int(data.get('Age', 1))
         }
 
@@ -94,39 +177,61 @@ def predict_diabetes_risk(data):
             if col in input_df.columns:
                 input_df.at[0, col] = val
 
-        # Predykcja dla każdego modelu
         predictions = {}
+        rf_confidence = 0
 
+        # 2. Predykcja 3 modeli
         for model_name, model in _models.items():
             if model is not None:
                 try:
                     prediction = model.predict(input_df)[0]
                     probabilities = model.predict_proba(input_df)[0]
+                    confidence = float(round(max(probabilities) * 100, 2))
+
+                    if model_name == 'random_forest':
+                        if prediction == 0:
+                            rf_confidence = 100 - confidence
+                        else:
+                            rf_confidence = confidence
 
                     predictions[model_name] = {
                         'prediction': int(prediction),
                         'probabilities': {
-                            'class_0': float(round(probabilities[0] * 100, 2)),
-                            'class_1': float(round(probabilities[1] * 100, 2)),
-                            'class_2': float(round(probabilities[2] * 100, 2))
+                            f'class_{i}': float(round(p * 100, 2)) for i, p in enumerate(probabilities)
                         },
-                        'confidence': float(round(max(probabilities) * 100, 2))
+                        'confidence': confidence
                     }
                 except Exception as e:
-                    print(f"Error predicting with {model_name}: {e}")
+                    print(f"Error in {model_name}: {e}")
                     predictions[model_name] = None
 
-        if not predictions or all(v is None for v in predictions.values()):
+        # 3. SHAP + Gemini (Tylko dla zalogowanych)
+        if is_authenticated and _models['random_forest']:
+            # SHAP
+            risk_factors, _ = get_shap_explanation(_models['random_forest'], input_df)
+
+            # Gemini LLM
+            llm_text = generate_llm_advice(data, rf_confidence, risk_factors)
+
+            if llm_text:
+                predictions['llm_analysis'] = llm_text
+
+            # --- DODAJ TĘ LINIE PONIŻEJ: ---
+            predictions['shap_factors'] = risk_factors
+            # -------------------------------
+
+        if not predictions:
             return None, "All predictions failed"
 
         return predictions, None
 
     except Exception as e:
-        print(f"Prediction Error: {e}")
+        print(f"Prediction logic error: {e}")
         return None, str(e)
 
 
 def analyze_risk_trend(history_records):
+    """Analiza regresji liniowej dla historii wyników."""
     if not history_records or len(history_records) < 2:
         return None
 
@@ -155,8 +260,9 @@ def analyze_risk_trend(history_records):
 
     return {
         "slope": round(slope, 4),
-        "trend_direction": "increasing" if slope > 0 else "decreasing",
-        "trend_description": "Ryzyko rośnie" if slope > 0 else "Ryzyko maleje",
+        "trend_direction": "increasing" if slope > 0.01 else ("decreasing" if slope < -0.01 else "stable"),
+        "trend_description": "Ryzyko rośnie" if slope > 0.01 else (
+            "Ryzyko maleje" if slope < -0.01 else "Ryzyko stabilne"),
         "current_risk": y[-1],
         "predicted_risk_30d": round(predicted_future_risk, 2),
         "history_points": [

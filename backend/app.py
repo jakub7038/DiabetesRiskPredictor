@@ -26,7 +26,10 @@ if __name__ == '__main__':
     # RESOLUTION: We load the model before the app starts
     with app.app_context():
         print("🔄 Loading ML Model...")
-        load_model() 
+        load_model()
+
+        db.drop_all()
+        db.create_all()# do usuniecia
 
     # We use use_reloader=False to fix the Windows "WinError 10038" crash
     app.run(debug=True, use_reloader=False, port=5000)

@@ -51,6 +51,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
+load_dotenv()
+
 db = SQLAlchemy()
 
 class User(db.Model):
@@ -124,17 +127,20 @@ class Log(db.Model):
     def __repr__(self):
         return f'<Log {self.log_date} User {self.user_id}>'
 
+
 class History(db.Model):
     __tablename__ = 'history'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    
-    # AI Results
-    result = db.Column(db.Integer, nullable=False)       # 0, 1, or 2
-    probability = db.Column(db.Float, nullable=False)    # e.g., 85.50
-    input_snapshot = db.Column(db.JSON, nullable=True)   
+
+    result = db.Column(db.Integer, nullable=False)
+    probability = db.Column(db.Float, nullable=False)
+
+    llm_feedback = db.Column(db.Text, nullable=True)
+
+    input_snapshot = db.Column(db.JSON, nullable=True)
 
     def __repr__(self):
         return f'<History Result {self.result} User {self.user_id}>'

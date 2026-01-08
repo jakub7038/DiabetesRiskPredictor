@@ -49,20 +49,27 @@ def predict():
     user_id = get_jwt_identity()
     data = request.get_json()
 
-    predictions, error = predict_diabetes_risk(data)
+    # Przekazujemy czy użytkownik jest zalogowany
+    predictions, error = predict_diabetes_risk(data, is_authenticated=bool(user_id))
 
     if predictions is None:
         return jsonify({"msg": "Prediction failed", "error": error}), 500
 
     if user_id:
         try:
-            # Zapisujemy wszystkie 3 predykcje jako osobne rekordy
+            llm_text = predictions.pop('llm_analysis', None)
+
+            shap_list = predictions.pop('shap_factors', [])
+
             for model_name, pred_data in predictions.items():
                 if pred_data is not None:
                     new_history = History(
                         user_id=user_id,
                         result=pred_data['prediction'],
                         probability=pred_data['confidence'],
+                        # Zapisujemy LLM tylko przy jednym rekordzie (np. Random Forest) lub wszystkich
+                        # Tutaj zapiszemy przy każdym dla uproszczenia, lub tylko przy RF
+                        llm_feedback=llm_text if model_name == 'random_forest' else None,
                         input_snapshot=json.dumps({
                             'input_data': data,
                             'model': model_name,
@@ -72,7 +79,10 @@ def predict():
                     db.session.add(new_history)
 
             db.session.commit()
-            print(f"✅ Saved predictions for user {user_id}")
+
+            # Przywracamy llm_analysis do odpowiedzi JSON
+            if llm_text:
+                predictions['llm_analysis'] = llm_text
 
         except Exception as e:
             db.session.rollback()
