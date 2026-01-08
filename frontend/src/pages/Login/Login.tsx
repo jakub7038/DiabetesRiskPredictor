@@ -31,17 +31,24 @@ const Login = () => {
     setError(null);
 
     try {
-      const result = await authService.login(formData);
+      const response = await authService.login(formData);
       
-      console.log(result)
+      const { access_token, refresh_token, user_id, email } = response.data
 
-      if (result.data && result.data.access_token) {
+      console.log(response)
+
+      if (access_token && user_id) {
+
+          const userData = {
+              id: user_id,
+              email: email
+          };
+
+          login(access_token, refresh_token, userData);
           
-          const userData = result.data.user || { id: '0', email: formData.email }; 
-          
-          login(result.data.access_token, userData);
-          
-          navigate('/konto');
+          navigate('/konto'); 
+      } else {
+          setError("Otrzymano niepełne dane z serwera.");
       }
       
     } catch (err: any) {
@@ -56,6 +63,12 @@ const Login = () => {
         <AuthWrapper title="Zaloguj się">
         <form onSubmit={handleSubmit}>
             
+            {error && (
+              <div style={{ color: 'red', marginBottom: '10px', fontSize: '0.9rem', textAlign: 'center' }}>
+                {error}
+              </div>
+            )}
+
             <Input
             label="Adres Email"
             type="email"
