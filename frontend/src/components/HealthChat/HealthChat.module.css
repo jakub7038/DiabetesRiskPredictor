@@ -1,0 +1,108 @@
+/* HealthChat.module.css */
+
+.chatContainer {
+  background-color: var(--color-background, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  height: 500px; /* Stała wysokość okna czatu */
+  overflow: hidden;
+}
+
+.chatHeader {
+  background-color: var(--color-primary, #456990);
+  padding: 1rem;
+  color: var(--color-text-light, white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chatHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.disclaimer {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.messagesArea {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #f9f9f9;
+}
+
+.messageBubble {
+  max-width: 80%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.botBubble {
+  background-color: #e9ecef;
+  color: var(--color-text-dark, black);
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+}
+
+.userBubble {
+  background-color: var(--color-primary, #456990);
+  color: var(--color-text-light, white);
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+}
+
+.typingIndicator {
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: 1rem;
+  font-style: italic;
+}
+
+/* Sekcja wpisywania */
+.inputArea {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+  background-color: white;
+}
+
+.inputField {
+  flex: 1;
+  padding: 0.8rem;
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  outline: none;
+  font-family: inherit;
+}
+
+.inputField:focus {
+  border-color: var(--color-primary, #456990);
+}
+
+.sendButton {
+  padding: 0 1.5rem;
+  border-radius: 25px;
+  border: none;
+  background-color: var(--color-secondary, #EF767A);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sendButton:hover {
+  opacity: 0.9;
+}

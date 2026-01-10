@@ -5,7 +5,7 @@ import Home from '@/pages/Home/Home'
 import Login from '@/pages/Login/Login'
 import Register from '@/pages/Register/Register'
 import RiskPredictor from '@/pages/RiskPredictor/RiskPredictor'
-import Account from '@/pages/Account/Account'
+import UserProfile from '@/pages/UserProfile/UserProfile'
 
 import { Routes, Route } from 'react-router-dom'
 
@@ -23,7 +23,7 @@ const App = () => {
           <Route path="/rejestracja" element={<Register />} />
           <Route path='/predyktor-ryzyka' element={<RiskPredictor />}></Route>
 
-          <Route path='/konto' element={<Account />}></Route>
+          <Route path='/konto' element={<UserProfile />}></Route>
         
           <Route path="/" element={<Home />} />
         </Routes>

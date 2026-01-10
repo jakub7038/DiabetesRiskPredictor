@@ -1,0 +1,231 @@
+/* UserProfile.module.css */
+
+/* Kontener główny */
+.profileContainer {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: var(--color-text-dark, black); /* Fallback to black */
+}
+
+.profileHeader {
+  margin-bottom: 2rem;
+}
+
+.profileHeader h1 {
+  color: var(--color-primary, #456990);
+  margin-bottom: 0.5rem;
+}
+
+/* Grid */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Karta */
+.card {
+  background-color: var(--color-background, #ffffff);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+  border: 1px solid #eee;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  margin-top: 0;
+  color: #666;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Sekcja Ryzyka */
+.riskValue {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-primary, #456990);
+  margin: 10px 0;
+}
+
+.textWarning {
+  color: var(--color-secondary, #EF767A);
+}
+
+.progressBarBg {
+  background-color: #f4f6f8;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progressBarFill {
+  background-color: var(--color-secondary, #EF767A);
+  height: 100%;
+}
+
+.scoreDetails {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* Sekcja Dni */
+.daysDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 1rem 0;
+}
+
+.daysNumber {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--color-primary, #456990);
+}
+
+.daysLabel {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.dateSubtext {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* Sekcja BMI */
+.bmiValue {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.warningBorder {
+  border: 2px solid var(--color-secondary, #EF767A);
+}
+
+
+
+.alertBox {
+  background-color: rgba(239, 118, 122, 0.1);
+  color: #c0392b;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  border-left: 4px solid var(--color-secondary, #EF767A);
+}
+
+.alertBox a{
+  font-weight: bold;
+  color: #c0392b;
+}
+
+.successBox {
+  background-color: rgba(69, 105, 144, 0.1);
+  color: var(--color-primary, #456990);
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* Przyciski */
+.actionsSection {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn {
+  padding: 0.8rem 2rem;
+  border-radius: 30px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 600;
+}
+
+.btnPrimary {
+  background-color: var(--color-primary, #456990);
+  color: var(--color-text-light, white);
+}
+
+.btnPrimary:hover {
+  opacity: 0.9;
+}
+
+.btnOutline {
+  background-color: transparent;
+  border: 2px solid var(--color-primary, #456990);
+  color: var(--color-primary, #456990);
+}
+
+.btnOutline:hover {
+  background-color: #f4f6f8;
+}
+
+/* UserProfile.module.css */
+
+/* --- Style dla karty danych --- */
+
+/* Nagłówek w jednej linii z przyciskiem "Edytuj" */
+.cardHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Mały link "Edytuj" */
+.editLink {
+  background: none;
+  border: none;
+  color: var(--color-primary, #456990);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.editLink:hover {
+  color: var(--color-secondary, #EF767A);
+}
+
+/* Lista danych */
+.detailsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0; /* Delikatna linia oddzielająca */
+  font-size: 0.95rem;
+}
+
+/* Usuwamy linię pod ostatnim elementem */
+.detailRow:last-child {
+  border-bottom: none;
+}
+
+.detailLabel {
+  color: #777; /* Szary dla etykiety */
+}
+
+.detailValue {
+  font-weight: 600;
+  color: var(--color-text-dark, black); /* Ciemniejszy dla wartości */
+}
