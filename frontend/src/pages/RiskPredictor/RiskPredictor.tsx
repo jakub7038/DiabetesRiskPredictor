@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import styles from './RiskPredictor.module.css';
 import { authService } from '@/api/authService';
+// Dodaj import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 interface Option {
     label: string;
@@ -61,12 +63,10 @@ const STEPS: StepConfig[] = [
                     { label: "ponad 80", value: "13" },
                 ]
             },
-
             {
                 id: 'Height',
                 text: "Podaj swój wzrost w cm",
                 type: "number",
-
             },
             {
                 id: 'Weight',
@@ -74,7 +74,6 @@ const STEPS: StepConfig[] = [
                 type: 'number',
                 unit: 'kg',
             }
-
         ]
     },
     {
@@ -84,7 +83,7 @@ const STEPS: StepConfig[] = [
         questions: [
             {
                 id: 'HighBP',
-                text: "Czy w ostatnim czasie miałeś zmierzone wysokie ciśnienie ?",
+                text: "Czy w ostatnim czasie miałeś zmierzone wysokie ciśnienie?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -93,7 +92,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'HighChol',
-                text: "Czy w ostatnim czasie miałeś zmierzony wysoki choresterol ?",
+                text: "Czy w ostatnim czasie miałeś zmierzony wysoki choresterol?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -102,7 +101,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'Stroke',
-                text: "Czy kiedykolwiek miałeś udar ?",
+                text: "Czy kiedykolwiek miałeś udar?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -111,7 +110,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'DiffWalk',
-                text: "Czy posiadasz jakiekolwiek trudności z chodzeniem ?",
+                text: "Czy posiadasz jakiekolwiek trudności z chodzeniem?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -120,7 +119,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'GenHlth',
-                text: "Jak oceniasz swój stan zdrowia ?",
+                text: "Jak oceniasz swój stan zdrowia?",
                 type: "select",
                 options: [
                     { label: "Tragicznie", value: "1" },
@@ -132,9 +131,9 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'PhysHlth',
-                text: "W ciągu ostatni 30 dni przez ile dni czułeś się dobrze pod względem fizycznym ?",
+                text: "W ciągu ostatni 30 dni przez ile dni czułeś się dobrze pod względem fizycznym?",
                 type: 'number',
-                unit: 'whatever',
+                unit: 'dni',
                 min: 0,
                 max: 30
             }
@@ -147,7 +146,7 @@ const STEPS: StepConfig[] = [
         questions: [
             {
                 id: 'PhysActivity',
-                text: "Czy uprawiasz jakąkolwiek aktywności fizyczną ?",
+                text: "Czy uprawiasz jakąkolwiek aktywności fizyczną?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -156,7 +155,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'Smoker',
-                text: "Czy palisz papierosy ?",
+                text: "Czy palisz papierosy?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -165,7 +164,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'Fruits',
-                text: "Czy spożywasz conajmniej jeden owoc dziennie ?",
+                text: "Czy spożywasz conajmniej jeden owoc dziennie?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -174,7 +173,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'Veggies',
-                text: "Czy spożywasz conajmniej jedno warzywo dzinnie ?",
+                text: "Czy spożywasz conajmniej jedno warzywo dzinnie?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -183,7 +182,7 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'HvyAlcoholConsump',
-                text: "Czy spożywasz dużo alkoholu ?",
+                text: "Czy spożywasz dużo alkoholu?",
                 type: "select",
                 options: [
                     { label: "Tak", value: "1" },
@@ -192,9 +191,9 @@ const STEPS: StepConfig[] = [
             },
             {
                 id: 'MentHlth',
-                text: "W ciągu ostatni 30 dni przez ile dni czułeś się dobrze pod względem zdrowia mentalnego ?",
+                text: "W ciągu ostatni 30 dni przez ile dni czułeś się dobrze pod względem zdrowia mentalnego?",
                 type: 'number',
-                unit: 'whatever',
+                unit: 'dni',
                 min: 0,
                 max: 30
             }
@@ -203,10 +202,9 @@ const STEPS: StepConfig[] = [
 ];
 
 const RiskPredictor = () => {
+    const navigate = useNavigate();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
-
     const [answers, setAnswers] = useState<Record<string, string | undefined>>({});
-
     const [isLoading, setIsLoading] = useState(false);
 
     const currentStep = STEPS[currentStepIndex];
@@ -221,39 +219,15 @@ const RiskPredictor = () => {
         if (!isFirstStep) setCurrentStepIndex(prev => prev - 1);
     };
 
-
     const handleAnswerChange = (questionId: string, value: string) => {
         const finalValue = value.trim() === '' ? undefined : value;
         setAnswers(prev => ({ ...prev, [questionId]: finalValue }));
-
     };
 
     const allQuestionsAnswered = currentStep.questions.every(q => {
         const ans = answers[q.id];
         return ans !== undefined && ans !== '';
     });
-
-    const formatPredictions = (predictions: any): string => {
-        let message = "WYNIKI ANALIZY:\n\n";
-
-        const modelNames: Record<string, string> = {
-            'logistic': 'Logistic Regression',
-            'random_forest': 'Random Forest',
-            'gradient_boost': 'Gradient Boosting'
-        };
-
-        for (const [modelKey, modelData] of Object.entries(predictions)) {
-            if (!modelData) continue;
-
-            const data = modelData as any;
-            message += `${modelNames[modelKey]}:\n`;
-            message += `Class 0: ${data.probabilities.class_0}%\n`;
-            message += `Class 1: ${data.probabilities.class_1}%\n`;
-            message += `Class 2: ${data.probabilities.class_2}%\n\n`;
-        }
-
-        return message;
-    };
 
     const handleSubmit = async () => {
         setIsLoading(true);
@@ -270,44 +244,27 @@ const RiskPredictor = () => {
             const predictionData = {
                 Sex: parseInt(answers['Sex'] || '0'),
                 Age: parseInt(answers['Age'] || '1'),
-
                 BMI: bmi,
-
                 HighBP: parseInt(answers['HighBP'] || '0'),
                 HighChol: parseInt(answers['HighChol'] || '0'),
                 Stroke: parseInt(answers['Stroke'] || '0'),
                 DiffWalk: parseInt(answers['DiffWalk'] || '0'),
                 GenHlth: parseInt(answers['GenHlth'] || '3'),
                 PhysHlth: parseInt(answers['PhysHlth'] || '0'),
-
                 PhysActivity: parseInt(answers['PhysActivity'] || '0'),
                 Smoker: parseInt(answers['Smoker'] || '0'),
                 Fruits: parseInt(answers['Fruits'] || '0'),
                 Veggies: parseInt(answers['Veggies'] || '0'),
                 HvyAlcoholConsump: parseInt(answers['HvyAlcoholConsump'] || '0'),
                 MentHlth: parseInt(answers['MentHlth'] || '0'),
-
             };
 
-            console.log(predictionData);
+            console.log('Sending prediction data:', predictionData);
 
             const result = await authService.predict(predictionData);
 
-            // Teraz result.predictions zawiera wszystkie 3 modele
-            if (result.predictions) {
-                const formattedMessage = formatPredictions(result.predictions);
-                alert(formattedMessage);
-            } else {
-                // Fallback na starą strukturę (jeśli backend jeszcze nie zaktualizowany)
-                const percentage = result.probability?.toFixed(1) || '0';
-                const diabetes_result = result.result;
-
-                if (diabetes_result === 0) alert(`Analiza zakończona!\nTwój wynik to: BRAK CUKRZYCY GRATULACJE \nPrawdopodobieństwo: ${percentage}%`);
-                else if (diabetes_result === 1) alert(`Analiza zakończona!\nTwój wynik to: STAN PRZEDCUKRZYCOWY \nPrawdopodobieństwo: ${percentage}%`);
-                else alert(`Analiza zakończona!\nTwój wynik to: CUKRZYCA !!!!!!!!!@!!!! \nPrawdopodobieństwo: ${percentage}%`);
-            }
-
-            // navigate('/wynik', { state: { result } });
+            // Przekierowanie do strony wyników z danymi
+            navigate('/wynik', { state: { result } });
 
         } catch (error: any) {
             console.error("Błąd predykcji:", error);
@@ -319,7 +276,6 @@ const RiskPredictor = () => {
 
     return (
         <div className={styles.formContainer}>
-
             {/* PASEK POSTĘPU */}
             <div className={styles.progressBarWrapper}>
                 <div className={styles.progressLine}></div>
@@ -342,7 +298,6 @@ const RiskPredictor = () => {
             </div>
 
             <div className={styles.formContent}>
-
                 <div className={styles.questionColumn}>
                     <div className={styles.stepInfo}>
                         <h2 className={styles.stepTitle}>{currentStep.title}</h2>
@@ -351,11 +306,9 @@ const RiskPredictor = () => {
                         )}
                     </div>
 
-
                     <div className={styles.questionsList}>
                         {currentStep.questions.map((question) => (
                             <div key={question.id} className={styles.QuestionBlock}>
-
                                 <h3 className={styles.questionText}>{question.text}</h3>
 
                                 {question.type === 'select' && question.options && (
@@ -375,7 +328,6 @@ const RiskPredictor = () => {
                                     </div>
                                 )}
 
-
                                 {question.type === 'number' && (
                                     <div className={styles.numberInputWrapper}>
                                         <input
@@ -390,7 +342,6 @@ const RiskPredictor = () => {
                                         {question.unit && <span className={styles.numberUnit}>{question.unit}</span>}
                                     </div>
                                 )}
-
                             </div>
                         ))}
                     </div>
@@ -424,12 +375,10 @@ const RiskPredictor = () => {
                             </button>
                         )}
                     </div>
-
-
                 </div>
             </div>
         </div>
     );
 };
 
-export default RiskPredictor
+export default RiskPredictor;
