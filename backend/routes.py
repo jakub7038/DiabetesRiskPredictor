@@ -43,13 +43,14 @@ def refresh():
     return jsonify({"access_token": new_access_token}), 200
 
 # --- ML PREDICTION ROUTE ---
+# ZAMIEŃ TĘ CZĘŚĆ W routes.py w endpoincie /predict
+
 @auth_bp.route('/predict', methods=['POST'])
 @jwt_required(optional=True)
 def predict():
     user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Przekazujemy czy użytkownik jest zalogowany
     predictions, error = predict_diabetes_risk(data, is_authenticated=bool(user_id))
 
     if predictions is None:
@@ -58,17 +59,18 @@ def predict():
     if user_id:
         try:
             llm_text = predictions.pop('llm_analysis', None)
-
             shap_list = predictions.pop('shap_factors', [])
 
             for model_name, pred_data in predictions.items():
                 if pred_data is not None:
+                    # POPRAWKA: Oblicz prawdziwe ryzyko cukrzycy (klasa 1 + klasa 2)
+                    probabilities = pred_data.get('probabilities', {})
+                    diabetes_risk = probabilities.get('class_1', 0) + probabilities.get('class_2', 0)
+
                     new_history = History(
                         user_id=user_id,
                         result=pred_data['prediction'],
-                        probability=pred_data['confidence'],
-                        # Zapisujemy LLM tylko przy jednym rekordzie (np. Random Forest) lub wszystkich
-                        # Tutaj zapiszemy przy każdym dla uproszczenia, lub tylko przy RF
+                        probability=diabetes_risk,  # <- TUTAJ ZMIENIAMY z confidence na diabetes_risk
                         llm_feedback=llm_text if model_name == 'random_forest' else None,
                         input_snapshot=json.dumps({
                             'input_data': data,
@@ -80,7 +82,6 @@ def predict():
 
             db.session.commit()
 
-            # Przywracamy llm_analysis do odpowiedzi JSON
             if llm_text:
                 predictions['llm_analysis'] = llm_text
 

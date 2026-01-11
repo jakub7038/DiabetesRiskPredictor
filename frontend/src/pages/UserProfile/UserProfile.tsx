@@ -6,8 +6,8 @@ import { authService } from '@/api/authService';
 import { useAuth } from '@/context/AuthContext';
 
 interface UserData {
-  sex: boolean; // 0=Kobieta, 1=Mężczyzna
-  age: number; // 1-13 kategoria
+  sex: boolean;
+  age: number;
   high_bp: boolean;
   high_chol: boolean;
   chol_check: boolean;
@@ -19,22 +19,23 @@ interface UserData {
   diff_walk: boolean;
 }
 
+interface LastTestData {
+  date: string;
+  riskScore: number;
+  riskLevel: 'Niskie' | 'Średnie' | 'Wysokie';
+  bmi: number;
+  weight: number;
+  height: number;
+}
+
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [lastTest, setLastTest] = useState<LastTestData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<UserData>>({});
-
-  // Dummy data dla ostatniego testu (będzie zastąpione danymi z historii)
-  const [lastTest, setLastTest] = useState({
-    lastTestDate: "2024-05-10", 
-    lastRiskScore: 65,
-    riskLevel: "Wysokie" as 'Niskie' | 'Średnie' | 'Wysokie',
-    height: 176,
-    weight: 92
-  });
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -42,17 +43,53 @@ const UserProfile: React.FC = () => {
       return;
     }
     fetchUserData();
+    fetchLastTest();
   }, [isLoggedIn]);
 
   const fetchUserData = async () => {
     try {
-      setIsLoading(true);
       const response = await authService.getUserData();
       if (response.data) {
         setUserData(response.data);
       }
     } catch (error: any) {
       console.error('Błąd pobierania danych:', error);
+    }
+  };
+
+  const fetchLastTest = async () => {
+    try {
+      setIsLoading(true);
+      const response = await authService.getHistory(1); // Pobierz tylko ostatni test
+      
+      if (response.data && response.data.length > 0) {
+        const lastRecord = response.data[0];
+        
+        // Wyciągnij BMI, wagę i wzrost z input_data
+        const inputData = lastRecord.input_data || {};
+        const bmi = inputData.BMI || 0;
+        const weight = inputData.Weight || 0;
+        const height = inputData.Height || 0;
+        
+        // Określ poziom ryzyka na podstawie probability
+        let riskLevel: 'Niskie' | 'Średnie' | 'Wysokie' = 'Niskie';
+        if (lastRecord.probability >= 70) {
+          riskLevel = 'Wysokie';
+        } else if (lastRecord.probability >= 40) {
+          riskLevel = 'Średnie';
+        }
+        
+        setLastTest({
+          date: lastRecord.created_at,
+          riskScore: lastRecord.probability,
+          riskLevel: riskLevel,
+          bmi: bmi,
+          weight: weight,
+          height: height
+        });
+      }
+    } catch (error: any) {
+      console.error('Błąd pobierania ostatniego testu:', error);
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +117,7 @@ const UserProfile: React.FC = () => {
   };
 
   const calculateBMI = (weight: number, height: number): number => {
+    if (!weight || !height) return 0;
     const heightInMeters = height / 100;
     return parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(1));
   };
@@ -101,6 +139,15 @@ const UserProfile: React.FC = () => {
     return ageRanges[ageCategory] || "Nieznany";
   };
 
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pl-PL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }).format(date);
+  };
+
   if (isLoading) {
     return (
       <div className={styles.profileContainer}>
@@ -109,9 +156,10 @@ const UserProfile: React.FC = () => {
     );
   }
 
-  const bmi = calculateBMI(lastTest.weight, lastTest.height);
-  const daysSince = getDaysSinceTest(lastTest.lastTestDate);
+  // Oblicz BMI z ostatniego testu lub z inputu
+  const bmi = lastTest ? lastTest.bmi : 0;
   const isBmiHigh = bmi >= 25;
+  const daysSince = lastTest ? getDaysSinceTest(lastTest.date) : null;
 
   return (
     <div className={styles.profileContainer}>
@@ -281,46 +329,76 @@ const UserProfile: React.FC = () => {
           )}
         </div>
 
-        <div className={styles.card}>
-          <h3>Twoje ryzyko cukrzycy</h3>
-          <div className={styles.riskIndicator}>
-            <span className={`${styles.riskValue} ${lastTest.riskLevel === 'Wysokie' ? styles.textWarning : ''}`}>
-              {lastTest.riskLevel}
-            </span>
-            <div className={styles.progressBarBg}>
-              <div 
-                className={styles.progressBarFill} 
-                style={{ width: `${lastTest.lastRiskScore}%` }}
-              ></div>
+        {/* Karta Ryzyko Cukrzycy */}
+        {lastTest ? (
+          <div className={styles.card}>
+            <h3>Twoje ryzyko cukrzycy</h3>
+            <div className={styles.riskIndicator}>
+              <span className={`${styles.riskValue} ${lastTest.riskLevel === 'Wysokie' ? styles.textWarning : ''}`}>
+                {lastTest.riskLevel}
+              </span>
+              <div className={styles.progressBarBg}>
+                <div 
+                  className={styles.progressBarFill} 
+                  style={{ width: `${lastTest.riskScore}%` }}
+                ></div>
+              </div>
+              <p className={styles.scoreDetails}>{lastTest.riskScore}% w skali ryzyka</p>
             </div>
-            <p className={styles.scoreDetails}>{lastTest.lastRiskScore}% w skali ryzyka</p>
           </div>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Ostatnie badanie</h3>
-          <div className={styles.daysDisplay}>
-            <span className={styles.daysNumber}>{daysSince}</span>
-            <span className={styles.daysLabel}>dni temu</span>
+        ) : (
+          <div className={styles.card}>
+            <h3>Twoje ryzyko cukrzycy</h3>
+            <p className={styles.noDataText}>Brak danych. Wykonaj pierwszy test!</p>
+            <button 
+              className={`${styles.btn} ${styles.btnPrimary}`}
+              onClick={() => navigate('/predyktor-ryzyka')}
+            >
+              Wykonaj test
+            </button>
           </div>
-          <p className={styles.dateSubtext}>Data: {lastTest.lastTestDate}</p>
-        </div>
+        )}
 
-        <div className={`${styles.card} ${styles.bmiCard} ${isBmiHigh ? styles.warningBorder : ''}`}>
-          <h3>Twoje BMI</h3>
-          <div className={styles.bmiValue}>{bmi}</div>
-          
-          {isBmiHigh ? (
-            <div className={styles.alertBox}>
-              <strong>Uwaga!</strong> Twoje BMI wskazuje na nadwagę/otyłość. 
-              <a href="https://www.youtube.com/watch?v=DFhc3xqYKR8" target="_blank">Poradnik do zrzucenia wagi</a> 
+        {/* Karta Ostatnie Badanie */}
+        {lastTest && daysSince !== null ? (
+          <div className={styles.card}>
+            <h3>Ostatnie badanie</h3>
+            <div className={styles.daysDisplay}>
+              <span className={styles.daysNumber}>{daysSince}</span>
+              <span className={styles.daysLabel}>dni temu</span>
             </div>
-          ) : (
-            <div className={styles.successBox}>
-              Twoja waga jest w normie. Tak trzymaj!
-            </div>
-          )}
-        </div>
+            <p className={styles.dateSubtext}>Data: {formatDate(lastTest.date)}</p>
+          </div>
+        ) : (
+          <div className={styles.card}>
+            <h3>Ostatnie badanie</h3>
+            <p className={styles.noDataText}>Nie wykonałeś jeszcze żadnego testu.</p>
+          </div>
+        )}
+
+        {/* Karta BMI */}
+        {lastTest && bmi > 0 ? (
+          <div className={`${styles.card} ${styles.bmiCard} ${isBmiHigh ? styles.warningBorder : ''}`}>
+            <h3>Twoje BMI</h3>
+            <div className={styles.bmiValue}>{bmi.toFixed(1)}</div>
+            
+            {isBmiHigh ? (
+              <div className={styles.alertBox}>
+                <strong>Uwaga!</strong> Twoje BMI wskazuje na nadwagę/otyłość. 
+                <a href="https://www.youtube.com/watch?v=DFhc3xqYKR8" target="_blank">Poradnik do zrzucenia wagi</a> 
+              </div>
+            ) : (
+              <div className={styles.successBox}>
+                Twoja waga jest w normie. Tak trzymaj!
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className={styles.card}>
+            <h3>Twoje BMI</h3>
+            <p className={styles.noDataText}>Brak danych o BMI. Wykonaj test!</p>
+          </div>
+        )}
       </div>
 
       <div className={styles.actionsSection}>
