@@ -4,7 +4,7 @@ from datetime import datetime
 import time
 
 BASE_URL = "http://localhost:5000"
-TEST_EMAIL = f"test_{int(time.time())}@example.com"
+TEST_EMAIL = f"example@example.com"
 TEST_PASSWORD = "TestPassword123"
 
 

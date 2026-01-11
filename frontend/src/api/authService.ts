@@ -85,5 +85,96 @@ export const authService = {
   // Pomocnik do sprawdzania czy user jest zalogowany
   isAuthenticated: () => {
     return !!localStorage.getItem('accessToken');
+  },
+
+  getHistory: async (limit?: number) => {
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
+      throw new Error('Musisz być zalogowany');
+    }
+
+    const url = limit 
+      ? `${AUTH_URL}/history?limit=${limit}`
+      : `${AUTH_URL}/history`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+
+    if (response.status === 401) {
+      authService.logout();
+      throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    }
+
+    if (!response.ok) {
+      throw new Error(result.msg || 'Błąd pobierania historii');
+    }
+
+    return result;
+  },
+
+  getHistoryDetail: async (historyId: number) => {
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
+      throw new Error('Musisz być zalogowany');
+    }
+
+    const response = await fetch(`${AUTH_URL}/history/${historyId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+
+    if (response.status === 401) {
+      authService.logout();
+      throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    }
+
+    if (!response.ok) {
+      throw new Error(result.msg || 'Błąd pobierania szczegółów');
+    }
+
+    return result;
+  },
+
+  deleteHistory: async (historyId: number) => {
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
+      throw new Error('Musisz być zalogowany');
+    }
+
+    const response = await fetch(`${AUTH_URL}/history/${historyId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+
+    if (response.status === 401) {
+      authService.logout();
+      throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    }
+
+    if (!response.ok) {
+      throw new Error(result.msg || 'Błąd usuwania rekordu');
+    }
+
+    return result;
   }
 };

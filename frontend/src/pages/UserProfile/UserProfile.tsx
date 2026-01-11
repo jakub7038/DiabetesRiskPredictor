@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './UserProfile.module.css';
 import HealthChat from '@/components/HealthChat/HealthChat'
 
@@ -26,6 +27,7 @@ const currentUser: UserData = {
 };
 
 const UserProfile: React.FC = () => {
+  const navigate = useNavigate();
 
   const calculateBMI = (weight: number, height: number): number => {
     const heightInMeters = height / 100;
@@ -70,7 +72,7 @@ const UserProfile: React.FC = () => {
                 </li>
                 <li className={styles.detailRow}>
                     <span className={styles.detailLabel}>Płeć:</span>
-                    <span className={styles.detailValue}>Mężczyzna</span> {/* Tu w przyszłości pobierzesz z user.gender */}
+                    <span className={styles.detailValue}>Mężczyzna</span>
                 </li>
                 <li className={styles.detailRow}>
                     <span className={styles.detailLabel}>Wzrost:</span>
@@ -86,7 +88,6 @@ const UserProfile: React.FC = () => {
         <div className={styles.card}>
           <h3>Twoje ryzyko cukrzycy</h3>
           <div className={styles.riskIndicator}>
-            {/* Warunkowa klasa dla koloru tekstu */}
             <span className={`${styles.riskValue} ${currentUser.riskLevel === 'Wysokie' ? styles.textWarning : ''}`}>
               {currentUser.riskLevel}
             </span>
@@ -110,7 +111,7 @@ const UserProfile: React.FC = () => {
           <p className={styles.dateSubtext}>Data: {currentUser.lastTestDate}</p>
         </div>
 
-        {/* Karta 3: BMI z Ostrzeżeniem - Złożona klasa warunkowa */}
+        {/* Karta 3: BMI z Ostrzeżeniem */}
         <div className={`${styles.card} ${styles.bmiCard} ${isBmiHigh ? styles.warningBorder : ''}`}>
           <h3>Twoje BMI</h3>
           <div className={styles.bmiValue}>{bmi}</div>
@@ -128,10 +129,16 @@ const UserProfile: React.FC = () => {
       </div>
 
       <div className={styles.actionsSection}>
-        <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => console.log("History...")}>
+        <button 
+          className={`${styles.btn} ${styles.btnPrimary}`} 
+          onClick={() => navigate('/historia')}
+        >
           Zobacz historię badań
         </button>
-        <button className={`${styles.btn} ${styles.btnOutline}`}>
+        <button 
+          className={`${styles.btn} ${styles.btnOutline}`}
+          onClick={() => navigate('/predyktor-ryzyka')}
+        >
           Wykonaj nowy test
         </button>
       </div>

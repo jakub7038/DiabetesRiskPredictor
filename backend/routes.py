@@ -189,3 +189,113 @@ def get_trends():
         "msg": "Trend analysis successful",
         "data": trend_data
     }), 200
+
+
+@api_bp.route('/history', methods=['GET'])
+@jwt_required()
+def get_history():
+    """Pobiera historię predykcji użytkownika"""
+    user_id = get_jwt_identity()
+
+    # Opcjonalny parametr limit
+    limit = request.args.get('limit', type=int)
+
+    query = History.query.filter_by(user_id=user_id).order_by(History.created_at.desc())
+
+    if limit:
+        query = query.limit(limit)
+
+    history_records = query.all()
+
+    result = []
+    for record in history_records:
+        # Parsowanie input_snapshot
+        input_data = {}
+        if record.input_snapshot:
+            try:
+                snapshot = json.loads(record.input_snapshot)
+                input_data = snapshot.get('input_data', {})
+            except:
+                pass
+
+        # Helper function do etykiet
+        result_labels = {
+            0: "Brak cukrzycy",
+            1: "Stan przedcukrzycowy",
+            2: "Cukrzyca"
+        }
+
+        result.append({
+            "id": record.id,
+            "created_at": record.created_at.isoformat(),
+            "result": record.result,
+            "result_label": result_labels.get(record.result, "Nieznany"),
+            "probability": record.probability,
+            "llm_feedback": record.llm_feedback,
+            "input_data": input_data
+        })
+
+    return jsonify({
+        "msg": "History retrieved successfully",
+        "count": len(result),
+        "data": result
+    }), 200
+
+
+@api_bp.route('/history/<int:history_id>', methods=['GET'])
+@jwt_required()
+def get_history_detail(history_id):
+    """Pobiera szczegóły pojedynczej predykcji"""
+    user_id = get_jwt_identity()
+
+    record = History.query.filter_by(id=history_id, user_id=user_id).first()
+
+    if not record:
+        return jsonify({"msg": "History record not found"}), 404
+
+    # Parsowanie input_snapshot
+    snapshot_data = {}
+    if record.input_snapshot:
+        try:
+            snapshot_data = json.loads(record.input_snapshot)
+        except:
+            pass
+
+    result_labels = {
+        0: "Brak cukrzycy",
+        1: "Stan przedcukrzycowy",
+        2: "Cukrzyca"
+    }
+
+    return jsonify({
+        "msg": "History detail retrieved successfully",
+        "data": {
+            "id": record.id,
+            "created_at": record.created_at.isoformat(),
+            "result": record.result,
+            "result_label": result_labels.get(record.result, "Nieznany"),
+            "probability": record.probability,
+            "llm_feedback": record.llm_feedback,
+            "input_snapshot": snapshot_data
+        }
+    }), 200
+
+
+@api_bp.route('/history/<int:history_id>', methods=['DELETE'])
+@jwt_required()
+def delete_history(history_id):
+    """Usuwa pojedynczy rekord historii"""
+    user_id = get_jwt_identity()
+
+    record = History.query.filter_by(id=history_id, user_id=user_id).first()
+
+    if not record:
+        return jsonify({"msg": "History record not found"}), 404
+
+    try:
+        db.session.delete(record)
+        db.session.commit()
+        return jsonify({"msg": "History record deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": str(e)}), 500
