@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './RiskPredictor.module.css';
 import { authService } from '@/api/authService';
 // Dodaj import useNavigate
 import { useNavigate } from 'react-router-dom';
+
 
 interface Option {
     label: string;
@@ -206,6 +207,40 @@ const RiskPredictor = () => {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string | undefined>>({});
     const [isLoading, setIsLoading] = useState(false);
+    
+    useEffect(() => {
+            // Automatyczne uzupełnianie danych zalogowanego użytkownika
+            const loadUserData = async () => {
+                try {
+                    const response = await authService.getUserData();
+                    if (response.data) {
+                        const userData = response.data;
+                        
+                        // Mapowanie danych użytkownika na odpowiedzi w ankiecie
+                        const prefillData: Record<string, string> = {
+                            'Sex': userData.sex ? '1' : '0',
+                            'Age': userData.age.toString(),
+                            'HighBP': userData.high_bp ? '1' : '0',
+                            'HighChol': userData.high_chol ? '1' : '0',
+                            'Stroke': userData.stroke ? '1' : '0',
+                            'DiffWalk': userData.diff_walk ? '1' : '0',
+                            'Smoker': userData.smoker ? '1' : '0',
+                            'HeartDiseaseorAttack': userData.heart_disease ? '1' : '0',
+                        };
+                        
+                        setAnswers(prev => ({
+                            ...prev,
+                            ...prefillData
+                        }));
+                    }
+                } catch (error) {
+                    // Użytkownik niezalogowany lub brak danych - to OK
+                    console.log('Brak zapisanych danych użytkownika');
+                }
+            };
+
+            loadUserData();
+        }, []);
 
     const currentStep = STEPS[currentStepIndex];
     const isFirstStep = currentStepIndex === 0;

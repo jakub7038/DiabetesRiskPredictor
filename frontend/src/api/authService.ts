@@ -176,5 +176,64 @@ export const authService = {
     }
 
     return result;
+  },
+  
+  getUserData: async () => {
+  const token = localStorage.getItem('accessToken');
+  
+  if (!token) {
+    throw new Error('Musisz być zalogowany');
   }
+
+  const response = await fetch(`${AUTH_URL}/user-data`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  const result = await response.json();
+
+  if (response.status === 401) {
+    authService.logout();
+    throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+  }
+
+  if (!response.ok) {
+    throw new Error(result.msg || 'Błąd pobierania danych użytkownika');
+  }
+
+  return result;
+  },
+
+  saveUserData: async (data: any) => {
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
+      throw new Error('Musisz być zalogowany');
+    }
+
+    const response = await fetch(`${AUTH_URL}/user-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    if (response.status === 401) {
+      authService.logout();
+      throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    }
+
+    if (!response.ok) {
+      throw new Error(result.msg || 'Błąd zapisywania danych użytkownika');
+    }
+
+    return result;
+  },
 };

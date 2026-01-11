@@ -299,3 +299,95 @@ def delete_history(history_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": str(e)}), 500
+
+
+@api_bp.route('/user-data', methods=['GET'])
+@jwt_required()
+def get_user_data():
+    """Pobiera dane użytkownika"""
+    user_id = get_jwt_identity()
+
+    user_data = UserData.query.filter_by(user_id=user_id).first()
+
+    if not user_data:
+        return jsonify({
+            "msg": "No user data found",
+            "data": None
+        }), 200
+
+    return jsonify({
+        "msg": "User data retrieved successfully",
+        "data": {
+            "sex": user_data.sex,
+            "age": user_data.age,
+            "high_bp": user_data.high_bp,
+            "high_chol": user_data.high_chol,
+            "chol_check": user_data.chol_check,
+            "smoker": user_data.smoker,
+            "stroke": user_data.stroke,
+            "heart_disease": user_data.heart_disease,
+            "any_healthcare": user_data.any_healthcare,
+            "no_docbc_cost": user_data.no_docbc_cost,
+            "diff_walk": user_data.diff_walk
+        }
+    }), 200
+
+
+@api_bp.route('/user-data', methods=['POST'])
+@jwt_required()
+def save_user_data():
+    """Zapisuje lub aktualizuje dane użytkownika"""
+    user_id = get_jwt_identity()
+    data = request.get_json()
+
+    # Walidacja wymaganych pól
+    if 'sex' not in data or 'age' not in data:
+        return jsonify({"msg": "Sex and age are required"}), 400
+
+    user_data = UserData.query.filter_by(user_id=user_id).first()
+
+    try:
+        if user_data:
+            # Aktualizacja istniejących danych
+            user_data.sex = data.get('sex')
+            user_data.age = data.get('age')
+            user_data.high_bp = data.get('high_bp', False)
+            user_data.high_chol = data.get('high_chol', False)
+            user_data.chol_check = data.get('chol_check', False)
+            user_data.smoker = data.get('smoker', False)
+            user_data.stroke = data.get('stroke', False)
+            user_data.heart_disease = data.get('heart_disease', False)
+            user_data.any_healthcare = data.get('any_healthcare', True)
+            user_data.no_docbc_cost = data.get('no_docbc_cost', False)
+            user_data.diff_walk = data.get('diff_walk', False)
+        else:
+            # Tworzenie nowych danych
+            user_data = UserData(
+                user_id=user_id,
+                sex=data.get('sex'),
+                age=data.get('age'),
+                high_bp=data.get('high_bp', False),
+                high_chol=data.get('high_chol', False),
+                chol_check=data.get('chol_check', False),
+                smoker=data.get('smoker', False),
+                stroke=data.get('stroke', False),
+                heart_disease=data.get('heart_disease', False),
+                any_healthcare=data.get('any_healthcare', True),
+                no_docbc_cost=data.get('no_docbc_cost', False),
+                diff_walk=data.get('diff_walk', False)
+            )
+            db.session.add(user_data)
+
+        db.session.commit()
+
+        return jsonify({
+            "msg": "User data saved successfully",
+            "data": {
+                "sex": user_data.sex,
+                "age": user_data.age
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": str(e)}), 500
