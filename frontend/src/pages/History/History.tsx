@@ -66,21 +66,33 @@ const History = () => {
     }).format(date);
   };
 
-  const getResultColor = (result: number): string => {
-    switch (result) {
-      case 0: return styles.resultGreen;
-      case 1: return styles.resultYellow;
-      case 2: return styles.resultRed;
-      default: return '';
+  const getResultColor = (probability: number): string => {
+    if (probability < 15) {
+      return styles.resultGreen;  // Niskie ryzyko
+    } else if (probability < 35) {
+      return styles.resultYellow;  // Średnie ryzyko
+    } else {
+      return styles.resultRed;  // Wysokie ryzyko
     }
   };
 
-  const getResultIcon = (result: number): string => {
-    switch (result) {
-      case 0: return '✓';
-      case 1: return '⚠';
-      case 2: return '⚠';
-      default: return '?';
+  const getRiskLevel = (probability: number): string => {
+    if (probability < 15) {
+      return 'Niskie ryzyko';
+    } else if (probability < 35) {
+      return 'Średnie ryzyko';
+    } else {
+      return 'Wysokie ryzyko';
+    }
+  };
+
+  const getResultIcon = (probability: number): string => {
+    if (probability < 15) {
+      return '✓';
+    } else if (probability < 35) {
+      return '⚠';
+    } else {
+      return '⚠';
     }
   };
 
@@ -149,9 +161,9 @@ const History = () => {
                 <div className={styles.card}>
                   <div className={styles.cardHeader}>
                     <div className={styles.cardHeaderLeft}>
-                      <div className={`${styles.resultBadge} ${getResultColor(record.result)}`}>
-                        <span className={styles.resultIcon}>{getResultIcon(record.result)}</span>
-                        <span className={styles.resultLabel}>{record.result_label}</span>
+                      <div className={`${styles.resultBadge} ${getResultColor(record.probability)}`}>
+                        <span className={styles.resultIcon}>{getResultIcon(record.probability)}</span>
+                        <span className={styles.resultLabel}>{getRiskLevel(record.probability)}</span>
                       </div>
                       <div className={styles.dateInfo}>
                         <span className={styles.dateIcon}>📅</span>
@@ -160,8 +172,8 @@ const History = () => {
                     </div>
                     <div className={styles.cardHeaderRight}>
                       <div className={styles.probability}>
-                        <span className={styles.probabilityValue}>{record.probability}%</span>
-                        <span className={styles.probabilityLabel}>pewności</span>
+                        <span className={styles.probabilityValue}>{record.probability.toFixed(1)}%</span>
+                        <span className={styles.probabilityLabel}>ryzyko</span>
                       </div>
                     </div>
                   </div>

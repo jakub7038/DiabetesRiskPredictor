@@ -73,9 +73,9 @@ const UserProfile: React.FC = () => {
         
         // Określ poziom ryzyka na podstawie probability
         let riskLevel: 'Niskie' | 'Średnie' | 'Wysokie' = 'Niskie';
-        if (lastRecord.probability >= 70) {
+        if (lastRecord.probability >= 35) {
           riskLevel = 'Wysokie';
-        } else if (lastRecord.probability >= 40) {
+        } else if (lastRecord.probability >= 15) {
           riskLevel = 'Średnie';
         }
         
@@ -114,12 +114,6 @@ const UserProfile: React.FC = () => {
     } catch (error: any) {
       alert('Błąd zapisu danych: ' + error.message);
     }
-  };
-
-  const calculateBMI = (weight: number, height: number): number => {
-    if (!weight || !height) return 0;
-    const heightInMeters = height / 100;
-    return parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(1));
   };
 
   const getDaysSinceTest = (dateString: string): number => {
@@ -392,6 +386,9 @@ const UserProfile: React.FC = () => {
                 Twoja waga jest w normie. Tak trzymaj!
               </div>
             )}
+            <p className={styles.bmiDetails}>
+              Waga: {lastTest.weight} kg | Wzrost: {lastTest.height} cm
+            </p>
           </div>
         ) : (
           <div className={styles.card}>

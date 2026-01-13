@@ -4,10 +4,10 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 def register_user(email, password):
 
     if not email or not password:
-        return False, "Email and password are required"
+        return False, "Email oraz hasło są wymagane!"
 
     if User.query.filter_by(email=email).first():
-        return False, "User already exists"
+        return False, "Użytkownik juz istnieje!"
 
     new_user = User(email=email)
     new_user.set_password(password)
@@ -15,7 +15,7 @@ def register_user(email, password):
     try:
         db.session.add(new_user)
         db.session.commit()
-        return True, "User created successfully"
+        return True, "Użytkownik stworzony."
     except Exception as e:
         db.session.rollback()
         return False, str(e)
