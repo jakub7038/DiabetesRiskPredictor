@@ -7,6 +7,8 @@ from models import db, UserData, Log, History, User
 from auth import register_user, login_user
 from ml_service import predict_diabetes_risk, analyze_risk_trend
 
+from services.ai_service import get_ai_response
+
 # ==========================================
 #  AUTH BLUEPRINT (Register, Login, Predict)
 # ==========================================
@@ -392,3 +394,53 @@ def save_user_data():
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": str(e)}), 500
+    
+
+
+@api_bp.route('/chat', methods=['POST'])
+@jwt_required()
+def chat_with_ai():
+    """
+    Endpoint obsługujący czat. Pobiera dane użytkownika z bazy,
+    aby nadać kontekst rozmowie, a następnie pyta Gemini.
+    """
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    user_message = data.get('message')
+
+    if not user_message:
+        return jsonify({"error": "Message is required"}), 400
+
+    # 1. Pobierz kontekst zdrowotny użytkownika (jeśli istnieje)
+    user_data = UserData.query.filter_by(user_id=user_id).first()
+    context = {}
+    
+    if user_data:
+        # Tłumaczenie danych z bazy na czytelny format dla AI
+        context = {
+            "sex": "Kobieta" if user_data.sex == 0 else "Mężczyzna",
+            "age": f"Kategoria wiekowa {user_data.age}", # Zakładając, że age to kategoria 1-13
+            "high_bp": user_data.high_bp,
+            "high_chol": user_data.high_chol,
+            # Obliczanie BMI jeśli mamy wagę i wzrost w ostatnich logach
+            "bmi": None 
+        }
+        
+        # Próba pobrania ostatniej wagi/wzrostu z logów
+        last_log = Log.query.filter_by(user_id=user_id).order_by(Log.log_date.desc()).first()
+        if last_log and last_log.weight and last_log.height:
+            try:
+                # height w cm, weight w kg
+                height_m = last_log.height / 100
+                bmi = last_log.weight / (height_m * height_m)
+                context["bmi"] = round(bmi, 2)
+            except:
+                pass
+
+    # 2. Wywołanie serwisu AI
+    ai_response_text = get_ai_response(user_message, user_context=context)
+
+    return jsonify({
+        "text": ai_response_text,
+        "status": "success"
+    }), 200

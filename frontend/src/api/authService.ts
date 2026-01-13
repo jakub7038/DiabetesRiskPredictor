@@ -236,4 +236,34 @@ export const authService = {
 
     return result;
   },
+chatWithAI: async (message: string) => {
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
+      throw new Error('Musisz być zalogowany, aby rozmawiać z asystentem.');
+    }
+
+    const response = await fetch(`${AUTH_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ message }),
+    });
+
+    const result = await response.json();
+
+    // Obsługa wygasłej sesji (standardowa dla Twojego serwisu)
+    if (response.status === 401) {
+       authService.logout();
+       throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    }
+
+    if (!response.ok) {
+      throw new Error(result.error || result.msg || 'Błąd komunikacji z asystentem');
+    }
+
+    return result; // Zwraca { text: "Odpowiedź...", status: "success" }
+  },
 };

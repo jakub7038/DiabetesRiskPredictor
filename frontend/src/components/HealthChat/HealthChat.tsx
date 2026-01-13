@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './HealthChat.module.css';
+import { authService } from '@/api/authService'; // Upewnij się, że ścieżka jest poprawna
+import { useAuth } from '@/context/AuthContext'; // Opcjonalne, do sprawdzania stanu logowania
 
-// Typy wiadomości
 interface Message {
   id: number;
   text: string;
@@ -9,20 +10,19 @@ interface Message {
 }
 
 const HealthChat: React.FC = () => {
+  const { isLoggedIn } = useAuth(); // Pobieramy stan zalogowania z kontekstu
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Stan początkowy z wiadomością powitalną
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Cześć! Jestem Twoim asystentem zdrowia. Pamiętaj, że nie jestem lekarzem, ale chętnie odpowiem na pytania dotyczące diety, cukrzycy i zdrowego stylu życia. O co chcesz zapytać?",
+      text: "Cześć! Jestem Twoim asystentem zdrowia. Jak mogę Ci dzisiaj pomóc?",
       sender: 'bot'
     }
   ]);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Automatyczne przewijanie do dołu przy nowej wiadomości
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -31,8 +31,18 @@ const HealthChat: React.FC = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
+
+    // 0. Sprawdzenie czy użytkownik jest zalogowany
+    if (!isLoggedIn) {
+        setMessages(prev => [...prev, {
+            id: Date.now(),
+            text: "Musisz się zalogować, aby korzystać z porady asystenta.",
+            sender: 'bot'
+        }]);
+        return;
+    }
 
     // 1. Dodaj wiadomość użytkownika
     const userMessage: Message = {
@@ -41,19 +51,38 @@ const HealthChat: React.FC = () => {
       sender: 'user'
     };
     setMessages(prev => [...prev, userMessage]);
+    
+    const currentInput = input;
     setInput('');
     setIsTyping(true);
 
-    // 2. Symulacja odpowiedzi LLM (tu w przyszłości wepniesz fetch do API)
-    setTimeout(() => {
+    try {
+      // 2. Wywołanie serwisu (to tutaj dzieje się magia z tokenem)
+      const data = await authService.chatWithAI(currentInput);
+
+      // 3. Obsługa sukcesu
       const botResponse: Message = {
         id: Date.now() + 1,
-        text: "To ciekawe pytanie. W przypadku prewencji cukrzycy kluczowa jest dieta o niskim indeksie glikemicznym. Czy chciałbyś przykładowy jadłospis?", // Mock response
+        text: data.text, // Backend zwraca pole "text"
         sender: 'bot'
       };
       setMessages(prev => [...prev, botResponse]);
+
+    } catch (error: any) {
+      console.error("Chat Error:", error);
+      
+      // Obsługa błędów (np. wygasły token rzucił błąd w service)
+      const errorMsg = error.message || "Przepraszam, wystąpił problem z połączeniem.";
+      
+      const errorResponse: Message = {
+        id: Date.now() + 1,
+        text: errorMsg,
+        sender: 'bot'
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500); // Symulujemy 1.5 sekundy opóźnienia
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -84,12 +113,17 @@ const HealthChat: React.FC = () => {
         <input
           type="text"
           className={styles.inputField}
-          placeholder="Zapytaj o zdrowie..."
+          placeholder={isLoggedIn ? "Zapytaj o zdrowie..." : "Zaloguj się, aby zapytać..."}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
+          disabled={!isLoggedIn || isTyping} // Blokujemy input jeśli niezalogowany
         />
-        <button className={styles.sendButton} onClick={handleSend}>
+        <button 
+            className={styles.sendButton} 
+            onClick={handleSend}
+            disabled={!isLoggedIn || isTyping}
+        >
           Wyślij
         </button>
       </div>
