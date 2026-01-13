@@ -386,9 +386,6 @@ const UserProfile: React.FC = () => {
                 Twoja waga jest w normie. Tak trzymaj!
               </div>
             )}
-            <p className={styles.bmiDetails}>
-              Waga: {lastTest.weight} kg | Wzrost: {lastTest.height} cm
-            </p>
           </div>
         ) : (
           <div className={styles.card}>
