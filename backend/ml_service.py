@@ -6,11 +6,9 @@ import numpy as np
 import shap
 from sklearn.linear_model import LinearRegression
 
-# --- KONFIGURACJA GEMINI (Darmowe API) ---
 try:
     import google.generativeai as genai
 
-    # Pobieramy klucz z .env
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
     if GEMINI_API_KEY:
@@ -18,11 +16,11 @@ try:
         _gemini_available = True
     else:
         _gemini_available = False
-        print("⚠️ Warning: GEMINI_API_KEY not found in environment variables.")
+        print("Nie ma API key w .env!")
 
 except ImportError:
     _gemini_available = False
-    print("⚠️ Warning: google-generativeai library not installed.")
+    print("Nie ma biblioteki do LLM!")
 
 # --- ZMIENNE GLOBALNE ---
 _models = {
@@ -35,7 +33,6 @@ _shap_explainer = None
 
 
 def load_model():
-    """Ładuje modele ML oraz kolumny treningowe przy starcie aplikacji."""
     global _models, _model_columns
 
     base_path = os.path.dirname(__file__)
@@ -55,18 +52,18 @@ def load_model():
         if os.path.exists(model_path):
             _models[key] = joblib.load(model_path)
             loaded_count += 1
-            print(f"✅ Loaded {key} model")
+            print(f"Loaded {key} model")
         else:
-            print(f"⚠️ Warning: {filename} not found")
+            print(f"Warning: {filename} not found")
 
     if os.path.exists(columns_path):
         _model_columns = joblib.load(columns_path)
-        print("✅ Model columns loaded successfully.")
+        print("Model columns loaded successfully.")
     else:
-        print(f"❌ Error: model_columns.pkl not found at: {columns_path}")
+        print(f"Error: model_columns.pkl not found at: {columns_path}")
 
     if loaded_count == 0:
-        print("❌ Error: No model files loaded!")
+        print("Error: No model files loaded!")
 
 
 def get_shap_explanation(model, input_df):
@@ -75,12 +72,10 @@ def get_shap_explanation(model, input_df):
 
     try:
         if _shap_explainer is None:
-            # TreeExplainer jest bardzo szybki dla modeli drzewiastych
             _shap_explainer = shap.TreeExplainer(model)
 
         shap_values = _shap_explainer.shap_values(input_df, check_additivity=False)
 
-        # Obsługa formatu wyjścia SHAP
         vals = shap_values[1] if isinstance(shap_values, list) and len(shap_values) > 1 else shap_values
 
         if isinstance(vals, list):
@@ -91,7 +86,6 @@ def get_shap_explanation(model, input_df):
 
         importance_dict = {name: float(val) for name, val in zip(feature_names, values_array)}
 
-        # Sortujemy cechy
         sorted_features = sorted(importance_dict.items(), key=lambda item: item[1], reverse=True)
 
         risk_factors = [f"{k}" for k, v in sorted_features[:3] if v > 0]
@@ -100,41 +94,58 @@ def get_shap_explanation(model, input_df):
         return risk_factors, protective_factors
 
     except Exception as e:
-        print(f"❌ SHAP Error: {e}")
+        print(f"SHAP Error: {e}")
         return [], []
 
 
-def generate_llm_advice(user_data, risk_prob, risk_factors):
+def generate_llm_advice(user_data, prediction_class, diabetes_risk, risk_factors):
     """Generuje poradę tekstową przy użyciu Google Gemini."""
     if not _gemini_available:
         return None
 
+    # Mapowanie klasy na opis
+    class_labels = {
+        0: "brak cukrzycy (zdrowy)",
+        1: "stan przedcukrzycowy",
+        2: "cukrzyca"
+    }
+
+    predicted_label = class_labels.get(prediction_class, "nieznany")
+
     prompt = f"""
-    Jesteś asystentem medycznym. Użytkownik przesłał dane zdrowotne.
+    Jesteś asystentem medycznym. Użytkownik przesłał dane zdrowotne i otrzymał wynik testu AI.
 
     DANE PACJENTA:
     - BMI: {user_data.get('BMI')}
     - Aktywność fizyczna: {'Tak' if user_data.get('PhysActivity') else 'Nie'}
     - Palenie: {'Tak' if user_data.get('Smoker') else 'Nie'}
     - Wiek (kategoria 1-13): {user_data.get('Age')}
+    - Wysokie ciśnienie: {'Tak' if user_data.get('HighBP') else 'Nie'}
+    - Wysoki cholesterol: {'Tak' if user_data.get('HighChol') else 'Nie'}
 
     WYNIKI AI (Random Forest):
-    - Ryzyko cukrzycy: {risk_prob}%
-    - Główne czynniki podnoszące ryzyko (wg SHAP): {', '.join(risk_factors)}
+    - Predykcja modelu: {predicted_label}
+    - Ryzyko zachorowania na cukrzycę (przedcukrzycowy + cukrzyca): {diabetes_risk}%
+    - Główne czynniki wpływające na ten wynik (wg SHAP): {', '.join(risk_factors) if risk_factors else 'brak danych'}
+
+    WAŻNE INFORMACJE:
+    - Jeśli ryzyko jest NISKIE (<15%): model uważa, że pacjent jest ZDROWY. Czynniki SHAP pokazują co CHRONI przed cukrzycą.
+    - Jeśli ryzyko jest ŚREDNIE (15-35%): model widzi PEWNE ZAGROŻENIE. Czynniki SHAP pokazują co zwiększa ryzyko.
+    - Jeśli ryzyko jest WYSOKIE (>35%): model przewiduje znaczące ryzyko PRZEDCUKRZYCY lub CUKRZYCY. Czynniki SHAP pokazują główne problemy.
 
     ZADANIE:
     Napisz 3 krótkie, konkretne zalecenia dla tej osoby. 
-    Odnieś się do czynników ryzyka wskazanych przez SHAP. Bądź empatyczny, ale rzeczowy.
-    Nie używaj wstępów typu "Oto zalecenia", po prostu wypunktuj.
+    - Jeśli ryzyko jest niskie: podkreśl pozytywne nawyki i zachęć do ich kontynuacji
+    - Jeśli ryzyko jest średnie/wysokie: skup się na działaniach prewencyjnych
+    Bądź empatyczny, ale rzeczowy. Nie używaj wstępów typu "Oto zalecenia", po prostu wypunktuj.
     """
 
     try:
-        # Używamy darmowego modelu Gemini Pro
         model = genai.GenerativeModel('models/gemini-flash-latest')
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        print(f"❌ Gemini Error: {e}")
+        print(f"Gemini Error: {e}")
         return None
 
 
@@ -178,7 +189,8 @@ def predict_diabetes_risk(data, is_authenticated=False):
                 input_df.at[0, col] = val
 
         predictions = {}
-        rf_confidence = 0
+        rf_prediction_class = 0
+        rf_diabetes_risk = 0
 
         # 2. Predykcja 3 modeli
         for model_name, model in _models.items():
@@ -188,37 +200,39 @@ def predict_diabetes_risk(data, is_authenticated=False):
                     probabilities = model.predict_proba(input_df)[0]
                     confidence = float(round(max(probabilities) * 100, 2))
 
+                    # Obliczamy prawdziwe ryzyko cukrzycy (klasa 1 + klasa 2)
+                    diabetes_risk = float(round((probabilities[1] + probabilities[2]) * 100, 2))
+
                     if model_name == 'random_forest':
-                        if prediction == 0:
-                            rf_confidence = 100 - confidence
-                        else:
-                            rf_confidence = confidence
+                        rf_prediction_class = int(prediction)
+                        rf_diabetes_risk = diabetes_risk
 
                     predictions[model_name] = {
                         'prediction': int(prediction),
                         'probabilities': {
                             f'class_{i}': float(round(p * 100, 2)) for i, p in enumerate(probabilities)
                         },
-                        'confidence': confidence
+                        'confidence': confidence,
+                        'diabetes_risk': diabetes_risk
                     }
                 except Exception as e:
                     print(f"Error in {model_name}: {e}")
                     predictions[model_name] = None
 
-        # 3. SHAP + Gemini (Tylko dla zalogowanych)
         if is_authenticated and _models['random_forest']:
-            # SHAP
             risk_factors, _ = get_shap_explanation(_models['random_forest'], input_df)
 
-            # Gemini LLM
-            llm_text = generate_llm_advice(data, rf_confidence, risk_factors)
+            llm_text = generate_llm_advice(
+                data,
+                rf_prediction_class,
+                rf_diabetes_risk,
+                risk_factors
+            )
 
             if llm_text:
                 predictions['llm_analysis'] = llm_text
 
-            # --- DODAJ TĘ LINIE PONIŻEJ: ---
             predictions['shap_factors'] = risk_factors
-            # -------------------------------
 
         if not predictions:
             return None, "All predictions failed"

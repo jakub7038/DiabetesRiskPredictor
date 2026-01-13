@@ -5,6 +5,7 @@ import styles from './PredictionResult.module.css';
 interface ModelPrediction {
   confidence: number;
   prediction: number;
+  diabetes_risk?: number;
   probabilities: {
     class_0: number;
     class_1: number;
@@ -57,34 +58,46 @@ const PredictionResult = () => {
     }
   };
 
-  const getResultColor = (prediction: number): string => {
-    switch (prediction) {
-      case 0:
-        return styles.resultGreen;
-      case 1:
-        return styles.resultYellow;
-      case 2:
-        return styles.resultRed;
-      default:
-        return '';
+  const getResultColorFromRisk = (diabetesRisk: number): string => {
+    if (diabetesRisk < 15) {
+      return styles.resultGreen;
+    } else if (diabetesRisk < 35) {
+      return styles.resultYellow;
+    } else {
+      return styles.resultRed;
     }
   };
 
-  const getResultIcon = (prediction: number): string => {
-    switch (prediction) {
-      case 0:
-        return '✓';
-      case 1:
-        return '⚠';
-      case 2:
-        return '⚠';
-      default:
-        return '?';
+  const getRiskLevelFromProbability = (diabetesRisk: number): string => {
+    if (diabetesRisk < 15) {
+      return 'Niskie ryzyko';
+    } else if (diabetesRisk < 35) {
+      return 'Średnie ryzyko';
+    } else {
+      return 'Wysokie ryzyko';
+    }
+  };
+
+  const getResultIcon = (diabetesRisk: number): string => {
+    if (diabetesRisk < 15) {
+      return '✓';
+    } else if (diabetesRisk < 35) {
+      return '⚠';
+    } else {
+      return '⚠';
     }
   };
 
   const { predictions, is_saved } = data;
   const mainPrediction = predictions.random_forest || predictions.logistic || predictions.gradient_boost;
+
+  // Oblicz prawdziwe ryzyko cukrzycy
+  const diabetesRisk = mainPrediction?.diabetes_risk || 
+                       (mainPrediction ? 
+                         mainPrediction.probabilities.class_1 + mainPrediction.probabilities.class_2 
+                         : 0);
+  
+  const riskLevelText = getRiskLevelFromProbability(diabetesRisk);
 
   return (
     <div className={styles.container}>
@@ -101,17 +114,20 @@ const PredictionResult = () => {
 
         {/* Main Result Card */}
         {mainPrediction && (
-          <div className={`${styles.mainResult} ${getResultColor(mainPrediction.prediction)}`}>
+          <div className={`${styles.mainResult} ${getResultColorFromRisk(diabetesRisk)}`}>
             <div className={styles.resultIcon}>
-              {getResultIcon(mainPrediction.prediction)}
+              {getResultIcon(diabetesRisk)}
             </div>
             <div className={styles.resultContent}>
               <h2 className={styles.resultTitle}>
-                {getResultLabel(mainPrediction.prediction)}
+                {riskLevelText}
               </h2>
               <div className={styles.confidence}>
-                Pewność: <strong>{mainPrediction.confidence}%</strong>
+                Ryzyko cukrzycy: <strong>{diabetesRisk.toFixed(1)}%</strong>
               </div>
+              <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.8 }}>
+                Model przewiduje: {getResultLabel(mainPrediction.prediction)}
+              </p>
             </div>
           </div>
         )}
@@ -174,7 +190,7 @@ const PredictionResult = () => {
 
         {/* Call to Action */}
         <div className={styles.ctaSection}>
-          {mainPrediction && mainPrediction.prediction > 0 && (
+          {diabetesRisk >= 35 && (
             <div className={styles.warningBox}>
               <p>
                 <strong>⚠️ Ważne:</strong> Ten test ma charakter informacyjny i nie stanowi diagnozy medycznej. 
@@ -230,6 +246,10 @@ const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
     }
   };
 
+  // Oblicz prawdziwe ryzyko cukrzycy (klasa 1 + klasa 2)
+  const diabetesRisk = data.diabetes_risk || 
+                       (data.probabilities.class_1 + data.probabilities.class_2);
+
   return (
     <div className={`${styles.modelCard} ${isMain ? styles.modelCardMain : ''}`}>
       <div className={styles.modelHeader}>
@@ -241,9 +261,12 @@ const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
           {getResultLabel(data.prediction)}
         </div>
         <div className={styles.modelConfidence}>
-          {data.confidence}%
+          {diabetesRisk.toFixed(1)}%
         </div>
       </div>
+      <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '1rem', textAlign: 'center' }}>
+        Ryzyko cukrzycy (klasa 1 + klasa 2)
+      </p>
       <div className={styles.probabilities}>
         <div className={styles.probBar}>
           <div className={styles.probLabel}>Brak cukrzycy</div>
@@ -253,7 +276,7 @@ const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
               style={{ width: `${data.probabilities.class_0}%` }}
             />
           </div>
-          <div className={styles.probValue}>{data.probabilities.class_0}%</div>
+          <div className={styles.probValue}>{data.probabilities.class_0.toFixed(1)}%</div>
         </div>
         <div className={styles.probBar}>
           <div className={styles.probLabel}>Przedcukrzycowy</div>
@@ -263,7 +286,7 @@ const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
               style={{ width: `${data.probabilities.class_1}%` }}
             />
           </div>
-          <div className={styles.probValue}>{data.probabilities.class_1}%</div>
+          <div className={styles.probValue}>{data.probabilities.class_1.toFixed(1)}%</div>
         </div>
         <div className={styles.probBar}>
           <div className={styles.probLabel}>Cukrzyca</div>
@@ -273,7 +296,7 @@ const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
               style={{ width: `${data.probabilities.class_2}%` }}
             />
           </div>
-          <div className={styles.probValue}>{data.probabilities.class_2}%</div>
+          <div className={styles.probValue}>{data.probabilities.class_2.toFixed(1)}%</div>
         </div>
       </div>
     </div>

@@ -23,4 +23,5 @@ class Config:
     SECRET_KEY=zmiennarandom
     JWT_SECRET_KEY=zmiennarandom
     DATABASE_URL=sqlite:///health_predictor.db
+    GEMINI_API_KEY=gemini_api_key
     """

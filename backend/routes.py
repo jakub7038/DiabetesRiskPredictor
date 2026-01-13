@@ -53,6 +53,54 @@ def predict():
     user_id = get_jwt_identity()
     data = request.get_json()
 
+    # === WALIDACJA DANYCH ===
+    errors = []
+
+    # Wymagane pola
+    if 'Sex' not in data:
+        errors.append("Pole 'Sex' jest wymagane")
+    elif data['Sex'] not in [0, 1]:
+        errors.append("Sex musi być 0 (kobieta) lub 1 (mężczyzna)")
+
+    if 'Age' not in data:
+        errors.append("Pole 'Age' jest wymagane")
+    elif not (1 <= data['Age'] <= 13):
+        errors.append("Age musi być w zakresie 1-13")
+
+    if 'BMI' not in data:
+        errors.append("Pole 'BMI' jest wymagane")
+    elif not (10 <= data['BMI'] <= 70):
+        errors.append("BMI musi być w zakresie 10-70")
+
+    # Walidacja pól opcjonalnych
+    if 'GenHlth' in data and not (1 <= data['GenHlth'] <= 5):
+        errors.append("GenHlth musi być w zakresie 1-5")
+
+    if 'MentHlth' in data and not (0 <= data['MentHlth'] <= 30):
+        errors.append("MentHlth musi być w zakresie 0-30 dni")
+
+    if 'PhysHlth' in data and not (0 <= data['PhysHlth'] <= 30):
+        errors.append("PhysHlth musi być w zakresie 0-30 dni")
+
+    # Walidacja pól binarnych
+    binary_fields = [
+        'HighBP', 'HighChol', 'Smoker', 'Stroke', 'HeartDiseaseorAttack',
+        'PhysActivity', 'Fruits', 'Veggies', 'HvyAlcoholConsump', 'DiffWalk'
+    ]
+
+    for field in binary_fields:
+        if field in data and data[field] not in [0, 1]:
+            errors.append(f"{field} musi być 0 lub 1")
+
+    # Jeśli są błędy walidacji, zwróć 400
+    if errors:
+        return jsonify({
+            "msg": "Błąd walidacji danych",
+            "errors": errors
+        }), 400
+
+    # === KONIEC WALIDACJI ===
+
     predictions, error = predict_diabetes_risk(data, is_authenticated=bool(user_id))
 
     if predictions is None:
@@ -65,14 +113,13 @@ def predict():
 
             for model_name, pred_data in predictions.items():
                 if pred_data is not None:
-                    # POPRAWKA: Oblicz prawdziwe ryzyko cukrzycy (klasa 1 + klasa 2)
                     probabilities = pred_data.get('probabilities', {})
                     diabetes_risk = probabilities.get('class_1', 0) + probabilities.get('class_2', 0)
 
                     new_history = History(
                         user_id=user_id,
                         result=pred_data['prediction'],
-                        probability=diabetes_risk,  # <- TUTAJ ZMIENIAMY z confidence na diabetes_risk
+                        probability=diabetes_risk,
                         llm_feedback=llm_text if model_name == 'random_forest' else None,
                         input_snapshot=json.dumps({
                             'input_data': data,
@@ -86,6 +133,9 @@ def predict():
 
             if llm_text:
                 predictions['llm_analysis'] = llm_text
+
+            if shap_list:
+                predictions['shap_factors'] = shap_list
 
         except Exception as e:
             db.session.rollback()
