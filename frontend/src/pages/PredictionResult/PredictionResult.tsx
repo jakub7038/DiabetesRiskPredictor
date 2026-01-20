@@ -125,9 +125,6 @@ const PredictionResult = () => {
               <div className={styles.confidence}>
                 Ryzyko cukrzycy: <strong>{diabetesRisk.toFixed(1)}%</strong>
               </div>
-              <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.8 }}>
-                Model przewiduje: {getResultLabel(mainPrediction.prediction)}
-              </p>
             </div>
           </div>
         )}
