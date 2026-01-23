@@ -23,7 +23,7 @@ const Register = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Walidacja frontendowa
         if (formData.password !== formData.confirmPassword) {
             setError("Hasła nie są takie same!");
@@ -50,39 +50,55 @@ const Register = () => {
     };
 
     return (
-            <AuthWrapper title="Załóż konto">
-                <form onSubmit={handleSubmit}>
-                    <Input
-                        label="Adres Email"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                    />
-                    <Input
-                        label="Hasło"
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                    />
-                    <Input
-                        label="Powtórz hasło"
-                        type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                    />
+        <AuthWrapper title="Załóż konto">
+            <form onSubmit={handleSubmit}>
+                <Input
+                    label="Adres Email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                />
+                <Input
+                    label="Hasło"
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                />
+                <Input
+                    label="Powtórz hasło"
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                />
 
-                    <div style={{ marginTop: '20px' }}>
-                        <Button size="lg" variant="primary">Zarejestruj się</Button>
+
+                {error && (
+                    <div style={{
+                        color: 'white',
+                        backgroundColor: '#ff4d4f',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        marginBottom: '10px',
+                        fontSize: '0.9rem'
+                    }}>
+                        {error}
                     </div>
+                )}
 
-                    <p style={{ marginTop: '15px', fontSize: '0.9rem' }}>
-                        Masz już konto? <Link to="/logowanie">Zaloguj się</Link>
-                    </p>
-                </form>
-            </AuthWrapper>
+                <div style={{ marginTop: '20px' }}>
+                    <Button size="lg" variant="primary" disabled={isLoading}>
+                        {isLoading ? 'Rejestracja...' : 'Zarejestruj się'}
+                    </Button>
+                </div>
+
+                <p style={{ marginTop: '15px', fontSize: '0.9rem' }}>
+                    Masz już konto? <Link to="/logowanie">Zaloguj się</Link>
+                </p>
+            </form>
+        </AuthWrapper>
     );
 };
 

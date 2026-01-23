@@ -11,6 +11,8 @@ import History from '@/pages/History/History'
 
 
 import { Routes, Route } from 'react-router-dom'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import PublicRoute from '@/components/auth/PublicRoute'
 
 const App = () => {
 
@@ -21,16 +23,37 @@ const App = () => {
       <main>
         <Routes>
 
+          {/* Public routes */}
           <Route path="/home" element={<Home />} />
-          <Route path="/logowanie" element={<Login />} />
-          <Route path="/rejestracja" element={<Register />} />
+          <Route path="/" element={<Home />} />
           <Route path='/predyktor-ryzyka' element={<RiskPredictor />}></Route>
           <Route path='/wynik' element={<PredictionResult />}></Route>
-          <Route path='/historia' element={<History />} />
 
-          <Route path='/konto' element={<UserProfile />}></Route>
-        
-          <Route path="/" element={<Home />} />
+          {/* Guest only routes */}
+          <Route path="/logowanie" element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } />
+          <Route path="/rejestracja" element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          } />
+
+          {/* Protected routes */}
+          <Route path="/historia" element={
+            <ProtectedRoute>
+              <History />
+            </ProtectedRoute>
+          } />
+
+          <Route path='/konto' element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          }></Route>
+
         </Routes>
       </main>
       <Footer />

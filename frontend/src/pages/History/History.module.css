@@ -1,7 +1,8 @@
 .container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
-  padding: 40px 20px;
+  padding: 40px 100px;
+  border-radius: 30px;
 }
 
 .content {
@@ -10,7 +11,8 @@
 }
 
 /* Loading & Error States */
-.loading, .error {
+.loading,
+.error {
   text-align: center;
   padding: 60px 20px;
 }
@@ -26,7 +28,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error h2 {
@@ -288,7 +292,8 @@
   border-top: 2px solid #f3f4f6;
 }
 
-.btnExpand, .btnDelete {
+.btnExpand,
+.btnDelete {
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 0.9rem;
@@ -331,6 +336,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

@@ -4,20 +4,42 @@
   margin-bottom: 1rem;
   width: 100%;
 }
+
 .label {
   margin-bottom: 0.5rem;
   font-weight: bold;
   font-size: 0.9rem;
 }
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
 .input {
   padding: 10px;
+  padding-right: 40px;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 1rem;
+  background-color: white;
+  width: 100%;
 }
+
+.suffix {
+  position: absolute;
+  right: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
 .inputError {
   border-color: red;
 }
+
 .errorMessage {
   color: red;
   font-size: 0.8rem;

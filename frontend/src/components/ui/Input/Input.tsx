@@ -1,30 +1,27 @@
 import styles from './Input.module.css';
 
-type InputProps = {
-  label: string;
-  type?: 'text' | 'password' | 'email' | 'number';
-  name: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-  error?: string; 
-};
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+  suffix?: React.ReactNode;
+}
 
-const Input = ({ label, type = 'text', name, value, onChange, placeholder, error }: InputProps) => {
+const Input = ({ label, className = '', error, suffix, ...props }: InputProps) => {
   return (
     <div className={styles.container}>
-      <label htmlFor={name} className={styles.label}>
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`${styles.input} ${error ? styles.inputError : ''}`}
-      />
+      {label && (
+        <label htmlFor={props.name} className={styles.label}>
+          {label}
+        </label>
+      )}
+      <div className={styles.inputWrapper}>
+        <input
+          id={props.name}
+          className={`${styles.input} ${error ? styles.inputError : ''} ${className}`}
+          {...props}
+        />
+        {suffix && <div className={styles.suffix}>{suffix}</div>}
+      </div>
 
       {error && <span className={styles.errorMessage}>{error}</span>}
     </div>

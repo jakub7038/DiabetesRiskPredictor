@@ -32,6 +32,11 @@ const History = () => {
       setError(null);
     } catch (err: any) {
       console.error('Błąd pobierania historii:', err);
+      // If auth error, let protected route handle it or redirect
+      if (err.message && (err.message.includes('zalogowany') || err.message.includes('sesja'))) {
+        navigate('/logowanie');
+        return;
+      }
       setError(err.message || 'Nie udało się pobrać historii');
     } finally {
       setIsLoading(false);
@@ -131,7 +136,7 @@ const History = () => {
               Łącznie wykonałeś {records.length} {records.length === 1 ? 'test' : 'testów'}
             </p>
           </div>
-          <button 
+          <button
             className={styles.btnPrimary}
             onClick={() => navigate('/predyktor-ryzyka')}
           >
@@ -144,7 +149,7 @@ const History = () => {
             <div className={styles.emptyIcon}>📊</div>
             <h2>Brak historii</h2>
             <p>Nie masz jeszcze żadnych zapisanych wyników.</p>
-            <button 
+            <button
               className={styles.btnPrimary}
               onClick={() => navigate('/predyktor-ryzyka')}
             >
@@ -157,7 +162,7 @@ const History = () => {
               <div key={record.id} className={styles.timelineItem}>
                 <div className={styles.timelineDot}></div>
                 {index < records.length - 1 && <div className={styles.timelineLine}></div>}
-                
+
                 <div className={styles.card}>
                   <div className={styles.cardHeader}>
                     <div className={styles.cardHeaderLeft}>
@@ -182,7 +187,7 @@ const History = () => {
                     <div className={styles.llmFeedback}>
                       <h4 className={styles.feedbackTitle}>💡 Zalecenia AI</h4>
                       <div className={styles.feedbackContent}>
-                        {record.llm_feedback.split('\n').map((line, i) => 
+                        {record.llm_feedback.split('\n').map((line, i) =>
                           line.trim() && <p key={i}>{line}</p>
                         )}
                       </div>
