@@ -1,21 +1,36 @@
-.ctaSection{
-    background-color: var(--color-primary);
-    color: var(--color-text-light);
-    width: 30%;
-    margin: 20px;
-    padding: 30px;
-    border-radius: 10px;
+.ctaSection {
+    /* Glass/Card effect */
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    padding: 3rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-align: center;
+    width: 100%;
 }
 
-.h2{
-    font-weight: bold;
-    margin-bottom: 10px;
+.h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: var(--color-primary-dark);
+    line-height: 1.2;
 }
 
-.ctaButton{
+.description {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: var(--color-text-main);
+    margin-bottom: 2rem;
+    max-width: 600px;
+    /* Limit line length for readability */
+}
+
+.ctaButton {
     margin-top: 20px;
 }

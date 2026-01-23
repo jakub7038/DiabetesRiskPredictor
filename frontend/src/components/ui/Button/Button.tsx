@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './Button.module.css';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline';
-type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -12,17 +12,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = ({
   children,
   className = '',
-  variant = 'primary', 
-  size = 'md',         
-  ...props             
+  variant = 'primary',
+  size = 'md',
+  ...props
 }: ButtonProps) => {
-  
+
 
   const classNames = [
     styles.button,
     styles[variant],
     styles[size],
-    className 
+    className
   ].join(' ');
 
   return (

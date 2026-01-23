@@ -9,19 +9,20 @@ import FeatureSection from '@/components/ui/FeatureSection/FeatureSection'
 
 const Home = () => {
     return (
-        <> 
-            
-                <div className={styles.container}>
-                    <img className={styles.heroImage} src={diabeticImage} alt="obrazek przedstawiający osobę zmagającą sie z cukrzycą" />
-                    <div className={styles.ctaOverlay}>
-                        <Cta 
-                            title="Poznaj swoje ryzyko"
-                            description="Cukrzyca potrafi rozwijać się latami, nie dając żadnych objawów. Nie czekaj, aż organizm wyśle sygnał alarmowy. Zrób darmowy test przesiewowy online i dowiedz się, na czym stoisz."
-                            buttonText="Oblicz swoje ryzyko teraz"
-                            buttonLink="/predyktor-ryzyka"
-                        />
-                    </div>
-                </div>             
+        <>
+
+            <div className={styles.container}>
+                <img className={styles.heroImage} src={diabeticImage} alt="obrazek przedstawiający osobę zmagającą sie z cukrzycą" />
+                <div className={styles.heroOverlay}></div>
+                <div className={styles.ctaWrapper}>
+                    <Cta
+                        title="Poznaj swoje ryzyko"
+                        description="Cukrzyca potrafi rozwijać się latami, nie dając żadnych objawów. Nie czekaj, aż organizm wyśle sygnał alarmowy. Zrób darmowy test przesiewowy online i dowiedz się, na czym stoisz."
+                        buttonText="Oblicz swoje ryzyko teraz"
+                        buttonLink="/predyktor-ryzyka"
+                    />
+                </div>
+            </div>
 
             <FeatureSection title='Dlaczego warto się badać?'>
                 <p>Cukrzyca nie boli, ale można ją wyprzedzić. Wiele osób żyje ze stanem przedcukrzycowym, nie wiedząc o tym.</p>
@@ -41,9 +42,9 @@ const Home = () => {
                 </ul>
                 <p className={styles.note}><em>To nie jest diagnoza lekarska, ale drogowskaz, który pokaże Ci, czy warto zrobić badania krwi.</em></p>
             </FeatureSection>
-            
-            <FeatureSection 
-                title='Kto powinien się zbadać?' 
+
+            <FeatureSection
+                title='Kto powinien się zbadać?'
                 isReversed={true}
                 imageSrc={riskFactorImage}
                 imageAlt='Obrazek otyłego osobnika z cukrzycą'
@@ -62,21 +63,30 @@ const Home = () => {
             <FeatureSection title='Jak to działa?'
                 imageSrc={actionImage}
                 imageAlt='Obrazek przedstawiający wypełnianie ankiety'
-            >    
+            >
                 <p>Wystarczą 3 proste kroki do lepszego zdrowia:</p>
-                
-                <div style={{ marginTop: '20px' }}>
+
+                <div className={styles.stepsContainer}>
                     <div className={styles.stepCard}>
-                        <strong>1. Wypełnij ankietę 📝</strong>
-                        <p style={{ margin: '5px 0 0 0', fontSize: '0.9em' }}>Odpowiedz na proste pytania. Bez podawania nazwiska.</p>
+                        <div className={styles.stepHeader}>
+                            <span>📝</span>
+                            <strong>1. Wypełnij ankietę</strong>
+                        </div>
+                        <p className={styles.stepDescription}>Odpowiedz na proste pytania. Bez podawania nazwiska.</p>
                     </div>
                     <div className={styles.stepCard}>
-                        <strong>2. Odbierz wynik 📊</strong>
-                        <p style={{ margin: '5px 0 0 0', fontSize: '0.9em' }}>Algorytm natychmiast obliczy Twoje ryzyko zachorowania.</p>
+                        <div className={styles.stepHeader}>
+                            <span>📊</span>
+                            <strong>2. Odbierz wynik</strong>
+                        </div>
+                        <p className={styles.stepDescription}>Algorytm natychmiast obliczy Twoje ryzyko zachorowania.</p>
                     </div>
                     <div className={styles.stepCard}>
-                        <strong>3. Dostań zalecenia 💡</strong>
-                        <p style={{ margin: '5px 0 0 0', fontSize: '0.9em' }}>Dowiedz się, czy wystarczy zmiana diety, czy konieczna jest wizyta u lekarza.</p>
+                        <div className={styles.stepHeader}>
+                            <span>💡</span>
+                            <strong>3. Dostań zalecenia</strong>
+                        </div>
+                        <p className={styles.stepDescription}>Dowiedz się, czy wystarczy zmiana diety, czy konieczna jest wizyta u lekarza.</p>
                     </div>
                 </div>
             </FeatureSection>

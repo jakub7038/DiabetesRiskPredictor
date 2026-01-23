@@ -20,12 +20,15 @@ a {
 }
 
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--color-text-main);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-
 }
 
 main {

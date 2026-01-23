@@ -56,14 +56,16 @@ const Header = () => {
 
     const handleLogout = () => {
         logout();
-        navigate('/home'); 
+        navigate('/home');
     };
 
 
     return (
         <header className={styles.header}>
-            <Link to="/home"><h1 className={styles.h1}>Predyktor ryzyka zachorowania na cukrzyce</h1></Link>
-            <nav>
+            <Link to="/home">
+                <h1 className={styles.h1}>Predyktor ryzyka zachorowania na cukrzyce</h1>
+            </Link>
+            <nav className={styles.nav}>
                 {links
                     .filter(link => {
                         const isAllowedOnPage = config.allowedLinks.includes(link.href)
@@ -77,23 +79,29 @@ const Header = () => {
 
                         return true;
                     })
-                    .map((link) => (
-                        <Link key={link.label} to={link.href} style={{ textDecoration: 'none' }}>
-                            <Button
-                                className={styles.button}
-                                size={link.label === 'Oblicz ryzyko' ? 'lg' : 'md'}
-                                variant={link.label === 'Oblicz ryzyko' ? 'primary' : 'secondary'}
-                            >
+                    .map((link) => {
+                        // Render primary action as Button, others as simple links
+                        if (link.label === 'Oblicz ryzyko') {
+                            return (
+                                <Link key={link.label} to={link.href}>
+                                    <Button size="md" variant="primary">
+                                        {link.label}
+                                    </Button>
+                                </Link>
+                            )
+                        }
+                        return (
+                            <Link key={link.label} to={link.href} className={styles.navLink}>
                                 {link.label}
-                            </Button>
-                        </Link>
-                    ))}
-                    {isLoggedIn && (
+                            </Link>
+                        )
+                    })}
+
+                {isLoggedIn && (
                     <Button
-                        className={styles.button}
                         size="md"
-                        variant="secondary"
-                        onClick={handleLogout} // Button musi obsługiwać onClick
+                        variant="secondary" // Ghost variant would be better here if available
+                        onClick={handleLogout}
                     >
                         Wyloguj
                     </Button>

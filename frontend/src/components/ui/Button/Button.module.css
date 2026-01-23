@@ -1,33 +1,32 @@
-
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; 
-  
-  border: 1px solid transparent; 
+  gap: 8px;
+
+  border: 1px solid transparent;
   border-radius: 6px;
-  
+
   font-family: inherit;
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
-  
+
   cursor: pointer;
-  user-select: none; 
+  user-select: none;
   transition: all 0.2s ease-in-out;
 }
 
 
 .button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); 
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
 }
 
 .button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  pointer-events: none; 
+  pointer-events: none;
   filter: grayscale(20%);
 }
 
@@ -96,4 +95,10 @@
   padding: 12px 24px;
   font-size: 17px;
   height: 48px;
+}
+
+.xl {
+  padding: 16px 32px;
+  font-size: 19px;
+  height: 56px;
 }
