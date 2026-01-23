@@ -111,25 +111,31 @@ def predict():
             llm_text = predictions.pop('llm_analysis', None)
             shap_list = predictions.pop('shap_factors', [])
 
-            for model_name, pred_data in predictions.items():
-                if pred_data is not None:
-                    probabilities = pred_data.get('probabilities', {})
-                    diabetes_risk = probabilities.get('class_1', 0) + probabilities.get('class_2', 0)
+            # Extract primary model (Random Forest) data for the main result
+            primary_model = predictions.get('random_forest')
+            
+            # Fallback if Random Forest failed but others didn't (unlikely but safe)
+            if not primary_model:
+                primary_model = predictions.get('logistic') or predictions.get('gradient_boost')
 
-                    new_history = History(
-                        user_id=user_id,
-                        result=pred_data['prediction'],
-                        probability=diabetes_risk,
-                        llm_feedback=llm_text if model_name == 'random_forest' else None,
-                        input_snapshot=json.dumps({
-                            'input_data': data,
-                            'model': model_name,
-                            'all_probabilities': pred_data['probabilities']
-                        })
-                    )
-                    db.session.add(new_history)
+            if primary_model:
+                # Calculate combined risk for the primary model
+                probabilities = primary_model.get('probabilities', {})
+                diabetes_risk = probabilities.get('class_1', 0) + probabilities.get('class_2', 0)
 
-            db.session.commit()
+                # Save ONE history record with all details
+                new_history = History(
+                    user_id=user_id,
+                    result=primary_model['prediction'],
+                    probability=diabetes_risk,
+                    llm_feedback=llm_text,
+                    model_scores=predictions, # Save ALL model predictions here
+                    input_snapshot=json.dumps({
+                        'input_data': data
+                    })
+                )
+                db.session.add(new_history)
+                db.session.commit()
 
             if llm_text:
                 predictions['llm_analysis'] = llm_text
@@ -285,7 +291,8 @@ def get_history():
             "result_label": result_labels.get(record.result, "Nieznany"),
             "probability": record.probability,
             "llm_feedback": record.llm_feedback,
-            "input_data": input_data
+            "input_data": input_data,
+            "model_scores": record.model_scores
         })
 
     return jsonify({
@@ -329,7 +336,8 @@ def get_history_detail(history_id):
             "result_label": result_labels.get(record.result, "Nieznany"),
             "probability": record.probability,
             "llm_feedback": record.llm_feedback,
-            "input_snapshot": snapshot_data
+            "input_snapshot": snapshot_data,
+            "model_scores": record.model_scores
         }
     }), 200
 

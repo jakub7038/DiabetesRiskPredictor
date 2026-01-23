@@ -139,6 +139,9 @@ class History(db.Model):
     probability = db.Column(db.Float, nullable=False)
 
     llm_feedback = db.Column(db.Text, nullable=True)
+    
+    # Stores combined scores from all models: {"random_forest": {...}, "logistic": {...}}
+    model_scores = db.Column(db.JSON, nullable=True)
 
     input_snapshot = db.Column(db.JSON, nullable=True)
 

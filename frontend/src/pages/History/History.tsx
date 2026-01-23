@@ -11,6 +11,7 @@ interface HistoryRecord {
   probability: number;
   llm_feedback?: string;
   input_data: any;
+  model_scores?: Record<string, any>;
 }
 
 const History = () => {
@@ -211,6 +212,38 @@ const History = () => {
 
                   {expandedId === record.id && (
                     <div className={styles.expandedContent}>
+
+                      {/* NEW: Model Comparison Section */}
+                      {record.model_scores && (
+                        <div className={styles.modelsComparison}>
+                          <h4 className={styles.detailsTitle}>Szczegóły modeli</h4>
+                          <div className={styles.modelsGrid}>
+                            {Object.entries(record.model_scores).map(([modelName, data]: [string, any]) => {
+                              if (!data) return null;
+                              const risk = data.diabetes_risk ||
+                                (data.probabilities.class_1 + data.probabilities.class_2);
+
+                              const getModelLabel = (name: string) => {
+                                if (name === 'random_forest') return 'Random Forest (Główny)';
+                                if (name === 'logistic') return 'Regresja Logistyczna';
+                                if (name === 'gradient_boost') return 'Gradient Boosting';
+                                return name;
+                              }
+
+                              return (
+                                <div key={modelName} className={styles.modelItem}>
+                                  <div className={styles.modelName}>{getModelLabel(modelName)}</div>
+                                  <div className={styles.modelRisk}>
+                                    <span className={styles.riskValue}>{risk.toFixed(1)}%</span>
+                                    <span className={styles.riskLabel}> ryzyka</span>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       <h4 className={styles.detailsTitle}>Dane wejściowe</h4>
                       <div className={styles.detailsGrid}>
                         {record.input_data.BMI && (
