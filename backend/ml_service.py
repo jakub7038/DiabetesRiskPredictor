@@ -29,15 +29,17 @@ _models = {
     'gradient_boost': None
 }
 _model_columns = None
+_scaler = None # Miejsce na wczytany StandardScaler
 _shap_explainer = None
 
 
 def load_model():
-    global _models, _model_columns
+    """Wczytuje modele, kolumny oraz skaler z plików pkl."""
+    global _models, _model_columns, _scaler
 
     base_path = os.path.dirname(__file__)
 
-    # Ścieżki do plików modeli
+    # Ścieżki do plików
     model_files = {
         'logistic': 'diabetes_model_logistic.pkl',
         'random_forest': 'diabetes_model_rf.pkl',
@@ -45,6 +47,7 @@ def load_model():
     }
 
     columns_path = os.path.join(base_path, 'model_columns.pkl')
+    scaler_path = os.path.join(base_path, 'scaler.pkl') # Ścieżka do skalera
 
     loaded_count = 0
     for key, filename in model_files.items():
@@ -56,6 +59,13 @@ def load_model():
         else:
             print(f"Warning: {filename} not found")
 
+    # Wczytywanie skalera
+    if os.path.exists(scaler_path):
+        _scaler = joblib.load(scaler_path)
+        print("StandardScaler loaded successfully.")
+    else:
+        print(f"Warning: scaler.pkl not found at: {scaler_path}")
+
     if os.path.exists(columns_path):
         _model_columns = joblib.load(columns_path)
         print("Model columns loaded successfully.")
@@ -66,15 +76,16 @@ def load_model():
         print("Error: No model files loaded!")
 
 
-def get_shap_explanation(model, input_df):
-    """Oblicza wpływ cech na wynik przy użyciu SHAP dla modelu Random Forest."""
+def get_shap_explanation(model, input_scaled_df):
+    """Oblicza wpływ cech na wynik przy użyciu SHAP na przeskalowanych danych."""
     global _shap_explainer
 
     try:
         if _shap_explainer is None:
             _shap_explainer = shap.TreeExplainer(model)
 
-        shap_values = _shap_explainer.shap_values(input_df, check_additivity=False)
+        # Używamy przeskalowanych danych do analizy
+        shap_values = _shap_explainer.shap_values(input_scaled_df, check_additivity=False)
 
         vals = shap_values[1] if isinstance(shap_values, list) and len(shap_values) > 1 else shap_values
 
@@ -82,10 +93,9 @@ def get_shap_explanation(model, input_df):
             vals = vals[-1]
 
         values_array = vals[0] if len(vals.shape) > 1 else vals
-        feature_names = input_df.columns.tolist()
+        feature_names = input_scaled_df.columns.tolist()
 
         importance_dict = {name: float(val) for name, val in zip(feature_names, values_array)}
-
         sorted_features = sorted(importance_dict.items(), key=lambda item: item[1], reverse=True)
 
         risk_factors = [f"{k}" for k, v in sorted_features[:3] if v > 0]
@@ -103,7 +113,6 @@ def generate_llm_advice(user_data, prediction_class, diabetes_risk, risk_factors
     if not _gemini_available:
         return None
 
-    # Mapowanie klasy na opis
     class_labels = {
         0: "brak cukrzycy (zdrowy)",
         1: "stan przedcukrzycowy",
@@ -128,16 +137,9 @@ def generate_llm_advice(user_data, prediction_class, diabetes_risk, risk_factors
     - Ryzyko zachorowania na cukrzycę (przedcukrzycowy + cukrzyca): {diabetes_risk}%
     - Główne czynniki wpływające na ten wynik (wg SHAP): {', '.join(risk_factors) if risk_factors else 'brak danych'}
 
-    WAŻNE INFORMACJE:
-    - Jeśli ryzyko jest NISKIE (<15%): model uważa, że pacjent jest ZDROWY. Czynniki SHAP pokazują co CHRONI przed cukrzycą.
-    - Jeśli ryzyko jest ŚREDNIE (15-35%): model widzi PEWNE ZAGROŻENIE. Czynniki SHAP pokazują co zwiększa ryzyko.
-    - Jeśli ryzyko jest WYSOKIE (>35%): model przewiduje znaczące ryzyko PRZEDCUKRZYCY lub CUKRZYCY. Czynniki SHAP pokazują główne problemy.
-
     ZADANIE:
     Napisz 3 krótkie, konkretne zalecenia dla tej osoby. 
-    - Jeśli ryzyko jest niskie: podkreśl pozytywne nawyki i zachęć do ich kontynuacji
-    - Jeśli ryzyko jest średnie/wysokie: skup się na działaniach prewencyjnych
-    Bądź empatyczny, ale rzeczowy. Nie używaj wstępów typu "Oto zalecenia", po prostu wypunktuj.
+    Bądź empatyczny, ale rzeczowy. Nie używaj wstępów, wypunktuj zalecenia.
     """
 
     try:
@@ -150,15 +152,15 @@ def generate_llm_advice(user_data, prediction_class, diabetes_risk, risk_factors
 
 
 def predict_diabetes_risk(data, is_authenticated=False):
-    """Główna funkcja predykcji (ML + SHAP + Gemini)."""
+    """Główna funkcja predykcji (Skalowanie -> ML -> SHAP -> Gemini)."""
 
-    if all(model is None for model in _models.values()):
+    if all(model is None for model in _models.values()) or _scaler is None:
         load_model()
         if all(model is None for model in _models.values()):
             return None, "All models failed to load"
 
     try:
-        # 1. Przygotowanie DataFrame
+        # 1. Przygotowanie surowego DataFrame
         input_df = pd.DataFrame(columns=_model_columns, dtype=float)
         input_df.loc[0] = 0.0
 
@@ -188,19 +190,26 @@ def predict_diabetes_risk(data, is_authenticated=False):
             if col in input_df.columns:
                 input_df.at[0, col] = val
 
+        # 2. SKALOWANIE DANYCH - Kluczowy krok dla poprawnych wyników
+        if _scaler:
+            input_scaled_values = _scaler.transform(input_df)
+            input_scaled_df = pd.DataFrame(input_scaled_values, columns=_model_columns)
+        else:
+            input_scaled_df = input_df
+
         predictions = {}
         rf_prediction_class = 0
         rf_diabetes_risk = 0
 
-        # 2. Predykcja 3 modeli
+        # 3. Predykcja na przeskalowanych danych
         for model_name, model in _models.items():
             if model is not None:
                 try:
-                    prediction = model.predict(input_df)[0]
-                    probabilities = model.predict_proba(input_df)[0]
+                    prediction = model.predict(input_scaled_df)[0]
+                    probabilities = model.predict_proba(input_scaled_df)[0]
                     confidence = float(round(max(probabilities) * 100, 2))
 
-                    # Obliczamy prawdziwe ryzyko cukrzycy (klasa 1 + klasa 2)
+                    # Ryzyko (klasa 1 + 2)
                     diabetes_risk = float(round((probabilities[1] + probabilities[2]) * 100, 2))
 
                     if model_name == 'random_forest':
@@ -219,8 +228,9 @@ def predict_diabetes_risk(data, is_authenticated=False):
                     print(f"Error in {model_name}: {e}")
                     predictions[model_name] = None
 
+        # 4. SHAP & LLM (wykorzystują przeskalowane dane)
         if is_authenticated and _models['random_forest']:
-            risk_factors, _ = get_shap_explanation(_models['random_forest'], input_df)
+            risk_factors, _ = get_shap_explanation(_models['random_forest'], input_scaled_df)
 
             llm_text = generate_llm_advice(
                 data,
@@ -234,9 +244,6 @@ def predict_diabetes_risk(data, is_authenticated=False):
 
             predictions['shap_factors'] = risk_factors
 
-        if not predictions:
-            return None, "All predictions failed"
-
         return predictions, None
 
     except Exception as e:
@@ -245,7 +252,7 @@ def predict_diabetes_risk(data, is_authenticated=False):
 
 
 def analyze_risk_trend(history_records):
-    """Analiza regresji liniowej dla historii wyników."""
+    """Analiza trendów na podstawie historycznych wyników."""
     if not history_records or len(history_records) < 2:
         return None
 
@@ -266,25 +273,17 @@ def analyze_risk_trend(history_records):
 
     slope = model.coef_[0]
     trend_line_values = model.predict(X)
-
     last_day = X[-1][0]
-    future_day = last_day + 30
-    predicted_future_risk = model.predict([[future_day]])[0]
-    predicted_future_risk = max(0, min(100, predicted_future_risk))
+    predicted_future_risk = max(0, min(100, model.predict([[last_day + 30]])[0]))
 
     return {
         "slope": round(slope, 4),
         "trend_direction": "increasing" if slope > 0.01 else ("decreasing" if slope < -0.01 else "stable"),
-        "trend_description": "Ryzyko rośnie" if slope > 0.01 else (
-            "Ryzyko maleje" if slope < -0.01 else "Ryzyko stabilne"),
+        "trend_description": "Ryzyko rośnie" if slope > 0.01 else ("Ryzyko maleje" if slope < -0.01 else "Ryzyko stabilne"),
         "current_risk": y[-1],
         "predicted_risk_30d": round(predicted_future_risk, 2),
         "history_points": [
-            {
-                "day": day[0],
-                "risk": risk,
-                "trend_value": round(trend_val, 2)
-            }
+            {"day": day[0], "risk": risk, "trend_value": round(trend_val, 2)}
             for day, risk, trend_val in zip(X, y, trend_line_values)
         ]
     }

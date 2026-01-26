@@ -1,111 +1,94 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+import numpy as np
 import joblib
 import time
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, classification_report
 
+# --- 1. ŁADOWANIE I PRZYGOTOWANIE DANYCH ---
 try:
     df = pd.read_csv('diabetes.csv')
     print("✅ Dataset loaded successfully.")
 except FileNotFoundError:
-    print("❌ Error: 'diabetes.csv' not found. Please make sure the file is in the same folder.")
+    print("❌ Error: 'diabetes.csv' not found.")
     exit()
 
 required_columns = [
-    'Diabetes_012', # Target (0=Healthy, 1=Pre, 2=Diabetes)
-    'HighBP', 
-    'HighChol', 
-    'Stroke', 
-    'DiffWalk', 
-    'PhysActivity', 
-    'GenHlth', 
-    'PhysHlth', 
-    'MentHlth', 
-    'Sex', 
-    'HeartDiseaseorAttack', 
-    'Smoker', 
-    'Fruits', 
-    'Veggies', 
-    'HvyAlcoholConsump', 
-    'BMI', 
-    'Age'
+    'Diabetes_012', 'HighBP', 'HighChol', 'Stroke', 'DiffWalk', 'PhysActivity',
+    'GenHlth', 'PhysHlth', 'MentHlth', 'Sex', 'HeartDiseaseorAttack',
+    'Smoker', 'Fruits', 'Veggies', 'HvyAlcoholConsump', 'BMI', 'Age'
 ]
-
-missing_cols = [col for col in required_columns if col not in df.columns]
-if missing_cols:
-    print(f"❌ Error: The following columns are missing from diabetes.csv: {missing_cols}")
-    exit()
-
 df = df[required_columns]
 
 X = df.drop(columns=['Diabetes_012'])
 y = df['Diabetes_012']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# --- 2. SKALOWANIE (Standardization) ---
+# Wyrównujemy skale wszystkich cech (np. BMI vs Age)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-print(f"Training on {X_train.shape[0]} records using {X_train.shape[1]} features.")
+# Podział z zachowaniem proporcji klas (stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42, stratify=y
+)
 
-models = {
-    "Logistic Regression": LogisticRegression(max_iter=1000),
-    "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
-    "XGBoost (Gradient Boosting)": GradientBoostingClassifier(random_state=42)
+print(f"Training on {X_train.shape[0]} records.")
+
+# --- 3. DEFINICJA I OPTYMALIZACJA MODELI ---
+
+# A. Regresja Logistyczna z wagami klas
+lr = LogisticRegression(max_iter=2000, class_weight='balanced', random_state=42)
+
+# B. Random Forest z automatycznym doborem parametrów
+rf_base = RandomForestClassifier(class_weight='balanced', random_state=42)
+rf_params = {
+    'n_estimators': [100, 200],
+    'max_depth': [10, 20, None],
+    'min_samples_leaf': [2, 4]
+}
+rf_search = RandomizedSearchCV(rf_base, rf_params, n_iter=5, cv=3, random_state=42, n_jobs=-1)
+print("Searching for best Random Forest parameters...")
+rf_search.fit(X_train, y_train)
+best_rf = rf_search.best_estimator_
+
+# C. Gradient Boosting (klasyczny Boosting)
+gb = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42)
+
+# --- 4. TRENOWANIE I EVALUACJA ---
+models_to_train = {
+    "Logistic Regression": lr,
+    "Random Forest": best_rf,
+    "Gradient Boosting": gb
 }
 
 results = {}
-trained_models = {}
 
-kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-for name, model in models.items():
+for name, model in models_to_train.items():
     print(f"\nTraining {name}...")
     start_time = time.time()
 
-    cv_scores = cross_val_score(model, X_train, y_train, cv=kfold, scoring='accuracy', n_jobs=-1)
-    print(f"  Cross-val: {round(cv_scores.mean() * 100, 2)}% (+/- {round(cv_scores.std() * 100, 2)}%)")
-
     model.fit(X_train, y_train)
-
     y_pred = model.predict(X_test)
+
     acc = accuracy_score(y_test, y_pred)
     results[name] = acc
-    trained_models[name] = model
 
-    end_time = time.time()
-    print(f"  Time: {round(end_time - start_time, 2)}s")
     print(f"  Accuracy: {round(acc * 100, 2)}%")
+    print(classification_report(y_test, y_pred))
+    print(f"  Time: {round(time.time() - start_time, 2)}s")
 
-print("\n=== FINAL RESULTS ===")
-best_accuracy = 0
-best_model_name = ""
-trained_models = {}
+# --- 5. ZAPISYWANIE ---
+print("\nSaving models and scaler...")
 
-for name, acc in results.items():
-    print(f"{name}: {round(acc * 100, 2)}%")
-    trained_models[name] = models[name]
-    if acc > best_accuracy:
-        best_accuracy = acc
-        best_model_name = name
+joblib.dump(lr, '../diabetes_model_logistic.pkl')
+joblib.dump(best_rf, '../diabetes_model_rf.pkl')
+joblib.dump(gb, '../diabetes_model_gb.pkl')
 
-print(f"\n🏆 Best Model: {best_model_name} ({round(best_accuracy * 100, 2)}%)")
-
-# Zapisujemy wszystkie 3 modele osobno
-print("\nSaving all models...")
-
-model_filenames = {
-    "Logistic Regression": '../diabetes_model_logistic.pkl',
-    "Random Forest": '../diabetes_model_rf.pkl',
-    "XGBoost (Gradient Boosting)": '../diabetes_model_gb.pkl'
-}
-
-for name, model in trained_models.items():
-    filename = model_filenames[name]
-    joblib.dump(model, filename)
-    print(f"✅ Saved: {filename}")
-
+joblib.dump(scaler, '../scaler.pkl')
 joblib.dump(X.columns.tolist(), '../model_columns.pkl')
-print("✅ Saved: ../model_columns.pkl")
 
-print("\n✅ SUCCESS! All 3 models saved")
+print("✅ SUCCESS! All 3 models and scaler saved.")
