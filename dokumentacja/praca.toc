@@ -1,0 +1,35 @@
+\babel@toc {polish}{}\relax 
+\contentsline {chapter}{\numberline {1}Wprowadzenie}{6}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Cele pracy}{6}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Jakiś tytuł}{6}{subsection.1.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.1.1}Jakiś tytuł w subsubsection}{6}{subsubsection.1.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}Jakiś tytuł 2}{6}{subsection.1.1.2}%
+\contentsline {section}{\numberline {1.2}Zawartość pracy}{6}{section.1.2}%
+\contentsline {chapter}{\numberline {2}Pierwszy dokument}{7}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Struktura dokumentu}{7}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Kompilacja}{7}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Narzędzia}{8}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Przygotowanie dokumentu}{9}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Sprawdzanie pisowni w VSC}{9}{section.2.5}%
+\contentsline {chapter}{\numberline {3}Przykłady używania podstawowych elementów w~\LaTeX }{11}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Punktory i listy wyliczeniowe}{11}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Liczba}{11}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Rysunki, tabele, schematy, wykresy}{11}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Rysunki}{12}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Tabele}{13}{subsection.3.3.2}%
+\contentsline {section}{\numberline {3.4}Wzory matematyczne}{15}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Code Listing}{16}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Style i kolory kodu}{17}{subsection.3.5.1}%
+\contentsline {section}{\numberline {3.6}Cytowania literatury}{19}{section.3.6}%
+\contentsline {chapter}{\numberline {4}Struktura pracy projektowej z Programowania Obiektowego JAVA/C\#}{21}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Opis założeń projektu}{21}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Opis struktury projektu}{25}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Harmonogram realizacji projektu}{26}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Prezentacja warstwy użytkowej projektu}{26}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Podsumowanie}{26}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Oświadczenie studenta o samodzielności pracy}{26}{section.4.6}%
+\contentsline {section}{\textbf {Bibliografia}}{27}{section.4.6}%
+\contentsline {section}{\textbf {Spis rysunków}}{28}{chapter*.5}%
+\contentsline {section}{\textbf {Spis tabel}}{29}{chapter*.5}%
+\contentsline {section}{\textbf {Spis listingów}}{30}{chapter*.5}%
+\contentsline {section}{\textbf {Oświadczenie studenta o samodzielności pracy}}{31}{chapter*.7}%

@@ -1,0 +1,62 @@
+\chapter{Wstęp i Architektura Systemu}
+\label{cha:wstep}
+
+\section{Wprowadzenie}
+Cukrzyca typu 2 jest jedną z najszybciej rozwijających się chorób cywilizacyjnych. Wczesna diagnoza i świadomość czynników ryzyka są kluczowe dla skutecznej prewencji. Celem projektu \textit{DiabetesRiskPredictor} jest stworzenie dostępnego narzędzia, które na podstawie danych ankietowych użytkownika (takich jak BMI, aktywność fizyczna, nawyki żywieniowe) oszacuje ryzyko zachorowania oraz dostarczy zrozumiałych rekomendacji zdrowotnych.
+
+\section{Architektura Systemu}
+System został zaprojektowany w architekturze klient-serwer, z wyraźnym podziałem na warstwę prezentacji, logiki biznesowej oraz modeli predykcyjnych.
+
+\begin{figure}[htbp]
+    \centering
+\begin{verbatim}
++-----------------+         +-----------------+         +-----------------+
+|    Frontend     |  HTTP   |     Backend     |         |   ML Models     |
+|  React + Vite   | <-----> |  Flask + SQLite | <-----> |  Scikit-learn   |
+|   Port: 5173    |         |   Port: 5000    |         |   + SHAP        |
++-----------------+         +-----------------+         +-----------------+
+                                    |
+                                    v
+                            +-----------------+
+                            |  Google Gemini  |
+                            |   (AI Advice)   |
+                            +-----------------+
+    \end{verbatim}
+    \caption{Schemat architektury systemu DiabetesRiskPredictor}
+    \label{fig:architektura}
+\end{figure}
+
+Główne komponenty systemu to:
+\begin{itemize}
+    \item \textbf{Frontend}: Aplikacja typu Single Page Application (SPA) zbudowana w oparciu o React 19 i Vite. Odpowiada za interakcję z użytkownikiem, zbieranie danych ankietowych oraz prezentację wyników.
+    \item \textbf{Backend}: Serwer API napisany w Pythonie (Flask). Obsługuje żądania HTTP, zarządza bazą danych użytkowników, autentykacją (JWT) oraz komunikacją z modelami ML.
+    \item \textbf{Modele ML}: Zestaw wytrenowanych modeli klasyfikacyjnych (Scikit-learn) służących do oceny ryzyka.
+    \item \textbf{Moduł AI}: Integracja z Google Gemini API w celu generowania spersonalizowanych porad zdrowotnych w języku naturalnym.
+\end{itemize}
+
+\section{Stos Technologiczny}
+
+W tabeli \ref{tab:technologie} przedstawiono szczegółowy stos technologiczny wykorzystany w projekcie.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Technologie wykorzystane w projekcie}
+    \label{tab:technologie}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Warstwa} & \textbf{Technologia} \\
+        \hline
+        Frontend & React 19, TypeScript, Vite, TailwindCSS (opcjonalnie) \\
+        \hline
+        Backend & Python 3, Flask, SQLAlchemy \\
+        \hline
+        Machine Learning & Scikit-learn, Pandas, NumPy, SHAP \\
+        \hline
+        Sztuczna Inteligencja & Google Gemini API \\
+        \hline
+        Autentykacja & JWT (JSON Web Tokens) \\
+        \hline
+        Baza Danych & SQLite (rozwojowa) / PostgreSQL (produkcyjna) \\
+        \hline
+    \end{tabular}
+\end{table}

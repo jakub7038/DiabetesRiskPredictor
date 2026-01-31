@@ -1,0 +1,116 @@
+\chapter{Implementacja i API}
+\label{cha:implementacja}
+
+\section{Backend (Flask)}
+Backend aplikacji pełni rolę huba integrującego bazę danych, modele ML oraz zewnętrzne API. Został zrealizowany w mikro-frameworku Flask, co zapewnia lekkość i łatwość rozbudowy.
+
+\subsection{Struktura API}
+
+Główne endpointy API to:
+
+\begin{itemize}
+    \item \texttt{POST /api/predict} - Główny endpoint. Przyjmuje JSON z danymi ankiety, zwraca wyniki ze wszystkich 3 modeli, analizę SHAP oraz poradę AI.
+    \item \texttt{POST /api/auth/register} - Rejestracja nowego użytkownika.
+    \item \texttt{POST /api/auth/login} - Logowanie (zwraca token JWT access + refresh).
+    \item \texttt{GET /api/user/history} - Pobranie historii predykcji zalogowanego użytkownika.
+\end{itemize}
+
+\subsection{Model Danych (SQLAlchemy)}
+Baza danych przechowuje informacje o użytkownikach oraz historię ich badań. Wykorzystano ORM SQLAlchemy.
+
+Relacje:
+\begin{itemize}
+    \item \texttt{User} (1) $\longleftrightarrow$ (N) \texttt{PredictionResult}
+    \item \texttt{User} (1) $\longleftrightarrow$ (1) \texttt{UserProfile} (dane demograficzne)
+\end{itemize}
+
+\section{Frontend (React)}
+Warstwa prezentacji została zbudowana jako Single Page Application. Wykorzystuje:
+\begin{itemize}
+    \item \textbf{React Router}: Do obsługi nawigacji bez przeładowywania strony.
+    \item \textbf{Axios}: Do komunikacji z API.
+    \item \textbf{Context API}: Do zarządzania stanem sesji użytkownika (autentykacja).
+\end{itemize}
+
+Proces badania składa się z 3 kroków (formularz wieloetapowy):
+1. Podstawowe dane (Wiek, Płeć).
+2. Parametry zdrowotne (BMI, Nadciśnienie).
+3. Styl życia (Dieta, Używki).
+
+Poniżej przedstawiono fragment komponentu formularza obsługującego wysyłkę danych:
+
+\begin{lstlisting}[style=javaStyle, caption=Obsluga formularza w React, label=lst:react]
+const handleSubmit = async (formData) => {
+    try {
+        const response = await api.post('/predict', formData);
+        setResult(response.data);
+        navigate('/results');
+    } catch (error) {
+        console.error("Blad predykcji:", error);
+    }
+};
+\end{lstlisting}
+
+\subsection{Widoki Aplikacji}
+Interfejs użytkownika został zaprojektowany z myślą o przejrzystości i łatwości obsługi. Poniżej przedstawiono kluczowe ekrany aplikacji.
+
+\subsubsection{Strona Główna i Formularz}
+Strona główna wita użytkownika i wyjaśnia cel aplikacji. Głównym elementem jest wieloetapowy formularz (Wizard), który prowadzi pacjenta przez proces wprowadzania danych.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/landingpage.png}
+    \caption{Interfejs strony głównej}
+    \label{fig:home}
+\end{figure}
+
+Kroki formularza zostały zaprojektowane tak, aby były intuicyjne i nie przytłaczały ilością pytań na jednym ekranie.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/formularz.png}
+    \caption{Widok kroków formularza diagnostycznego}
+    \label{fig:form_steps}
+\end{figure}
+
+\subsubsection{Prezentacja Wyników}
+Po przetworzeniu danych, użytkownik otrzymuje czytelny wynik w formie graficznej (wskaźnik ryzyka) oraz tekstowej. Kolorystyka (zielony/żółty/czerwony) natychmiastowo informuje o poziomie zagrożenia.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/wynikguest.png}
+    \caption{Ekran wyników predykcji z wykresem ryzyka}
+    \label{fig:results}
+\end{figure}
+
+\subsubsection{Analiza Szczegółowa (SHAP i AI)}
+Dla bardziej dociekliwych użytkowników dostępna jest sekcja szczegółowa, zawierająca spersonalizowaną poradę wygenerowaną przez asystenta AI.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/wynikiuserloggewdin.png}
+    \caption{Szczegółowa analiza czynników ryzyka i porada AI}
+    \label{fig:shap_ai}
+\end{figure}
+
+\subsubsection{Panel Użytkownika i Historia}
+Zalogowani użytkownicy mają dostęp do panelu, w którym mogą zarządzać swoim profilem oraz przeglądać historię wykonanych badań.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/userpage.png}
+    \caption{Panel użytkownika}
+    \label{fig:user_panel}
+\end{figure}
+
+Sekcja historii pozwala na śledzenie zmian ryzyka w czasie, co jest kluczowe dla prewencji długoterminowej.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/historiapredykcji.png}
+    \caption{Widok historii predykcji}
+    \label{fig:history}
+\end{figure}
+
+\section{Podsumowanie}
+Stworzony system \textit{DiabetesRiskPredictor} stanowi kompleksowe rozwiązanie demonstrujące praktyczne zastosowanie uczenia maszynowego w medycynie prewencyjnej. Połączenie klasycznych modeli klasyfikacyjnych z nowoczesną generatywną AI pozwala na dostarczenie użytkownikowi wartościowej i zrozumiałej informacji zwrotnej.

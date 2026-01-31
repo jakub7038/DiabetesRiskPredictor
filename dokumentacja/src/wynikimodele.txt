@@ -1,0 +1,48 @@
+✅ Dataset loaded successfully.
+Training on 202944 records.
+Searching for best Random Forest parameters...
+
+Training Logistic Regression...
+  Accuracy: 64.33%
+              precision    recall  f1-score   support
+
+         0.0       0.95      0.66      0.78     42741
+         1.0       0.03      0.30      0.05       926
+         2.0       0.35      0.59      0.44      7069
+
+    accuracy                           0.64     50736
+   macro avg       0.44      0.52      0.42     50736
+weighted avg       0.85      0.64      0.72     50736
+
+  Time: 0.27s
+
+Training Random Forest...
+  Accuracy: 79.45%
+              precision    recall  f1-score   support
+
+         0.0       0.90      0.86      0.88     42741
+         1.0       0.02      0.02      0.02       926
+         2.0       0.38      0.48      0.43      7069
+
+    accuracy                           0.79     50736
+   macro avg       0.44      0.45      0.44     50736
+weighted avg       0.81      0.79      0.80     50736
+
+  Time: 25.41s
+
+Training Gradient Boosting...
+  Accuracy: 84.9%
+              precision    recall  f1-score   support
+
+         0.0       0.86      0.98      0.92     42741
+         1.0       0.00      0.00      0.00       926
+         2.0       0.56      0.18      0.27      7069
+
+    accuracy                           0.85     50736
+   macro avg       0.47      0.38      0.39     50736
+weighted avg       0.80      0.85      0.81     50736
+
+  Time: 75.34s
+
+Saving models and scaler...
+✅ SUCCESS! All 3 models and scaler saved.

@@ -1,0 +1,54 @@
+\chapter{Wyjaśnialność i Integracja AI}
+\label{cha:ai}
+
+\section{Wyjaśnialność Modeli (XAI) z SHAP}
+Modele uczenia maszynowego często działają jak "czarne skrzynki". Aby zwiększyć zaufanie użytkownika do diagnozy, system implementuje metody XAI (Explainable AI), konkretnie bibliotekę SHAP (SHapley Additive exPlanations).
+
+Dla każdej predykcji system oblicza wartości SHAP, które pokazują, jak każda cecha wpłynęła na wynik końcowy (zwiększając lub zmniejszając ryzyko).
+
+\subsection{Implementacja SHAP}
+Analiza odbywa się w czasie rzeczywistym po wykonaniu predykcji:
+
+\begin{lstlisting}[style=stylePython, caption=Generowanie wyjasnien SHAP, label=lst:shap]
+def get_shap_explanation(model, input_scaled_df):
+    # Utworzenie explainera dla modelu drzewiastego
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(input_scaled_df)
+    
+    # Przetwarzanie wynikow...
+    # Identifikacja czynnikow ryzyka (wplyw dodatni)
+    # Identifikacja czynnikow ochronnych (wplyw ujemny)
+    
+    return risk_factors, protective_factors
+\end{lstlisting}
+
+Wyniki analizy SHAP są przekazywane do modelu językowego w celu wygenerowania bardziej precyzyjnych i spersonalizowanych zaleceń. Dzięki temu porada zdrowotna uwzględnia konkretne czynniki, które zaważyły na wyniku, takie jak BMI czy nadciśnienie.
+
+\section{Generatywna AI - Google Gemini}
+Oprócz twardych danych liczbowych, system oferuje "ludzką" poradę generowaną przez duży model językowy (LLM). Projekt wykorzystuje API Google Gemini.
+
+\subsection{Prompt Engineering}
+Kluczem do uzyskania wartościowych porad jest odpowiednio skonstruowany prompt. Aplikacja dynamicznie buduje zapytanie do modelu, zawierające:
+\begin{enumerate}
+    \item Dane pacjenta (wiek, płeć, wyniki badań).
+    \item Wynik predykcji (ryzyko cukrzycy).
+    \item Kontekst roli ("Jesteś asystentem medycznym...").
+    \item Ograniczenia ("Nie stawiaj ostatecznej diagnozy, sugeruj konsultację lekarską").
+\end{enumerate}
+
+\begin{lstlisting}[style=stylePython, caption=Integracja z Gemini API, label=lst:gemini]
+def generate_llm_advice(data, prediction_result):
+    prompt = f"""
+    Jako ekspert medyczny, przeanalizuj nastepujacy przypadek:
+    Pacjent: Kobieta, 45 lat, BMI 28.
+    Wynik modelu ML: Wysokie ryzyko cukrzycy (85%).
+    
+    Podaj 3 konkretne kroki, ktore pacjent moze podjac, 
+    aby zmniejszyc ryzyko. Uzywaj empatycznego jezyka.
+    """
+    
+    response = model.generate_content(prompt)
+    return response.text
+\end{lstlisting}
+
+Dzięki temu użytkownik otrzymuje nie tylko suchy wynik "Ryzyko: Wysokie", ale także spersonalizowany plan działania (np. "Zwiększ aktywność fizyczną do 30 min dziennie, skonsultuj poziom cukru z lekarzem POZ").

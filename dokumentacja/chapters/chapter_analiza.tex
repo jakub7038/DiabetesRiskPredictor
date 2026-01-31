@@ -1,0 +1,163 @@
+\chapter{Przegląd Aktualnych Rozwiązań i Analiza Wymagań}
+\label{cha:analiza}
+
+\section{Przegląd aktualnych rozwiązań}
+
+\subsection{Formularz American Diabetes Association}
+
+Internetowy kalkulatory ryzyka cukrzycy - formularz American Diabetes Association jest jednym z najczęściej spotykanych rozwiązań pozwalających na szybką samoocenę stanu zdrowia. Umożliwiają one wprowadzenie podstawowych biometrycznych, takich jak wiek, waga czy wzrost, w celu oszacowania ryzyka zachorowania w oparciu o sztywne reguły punktowe.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/formularzamericanda1.jpg}
+    \caption{Formularz American Diabetes Association}
+    \label{fig:ada_form}
+\end{figure}
+
+Do głównych zalet wymienionych wyżej rozwiązań należą:
+\begin{itemize}
+    \item \textbf{Szybkość i prostota}: Użytkownik otrzymuje wynik natychmiast po wypełnieniu krótkiej ankiety.
+    \item \textbf{Dostępność}: Brak konieczności zakładania konta czy logowania.
+    \item \textbf{Wiarygodność źródeł}: Bazują na ustandaryzowanych wytycznych medycznych.
+\end{itemize}
+
+Minusy tego formularza to:
+\begin{itemize}
+    \item \textbf{Brak personalizacji i wyjaśnienia}: Wynik jest liczbą lub statusem bez wyjaśnienia, który czynnik zaważył na diagnozie.
+    \item \textbf{Brak historii}: Brak możliwości zapisu wyników i śledzenia zmian w czasie.
+    \item Formularz na ekranie końcowym zniechęcający użytkowników do sprawdzenia wyników.
+\end{itemize}
+
+\subsection{Kalkulator platformy HaloDoctor}
+
+Drugim analizowanym rozwiązaniem jest kalkulator ryzyka cukrzycy typu 2 dostępny na platformie telemedycznej HaloDoctor. Narzędzie to oparte jest na międzynarodowej skali FINDRISC (Finnish Diabetes Risk Score) i służy do oszacowania ryzyka zachorowania w perspektywie najbliższych 10 lat. Formularz składa się z ośmiu kluczowych pytań, które łączą parametry ilościowe (BMI, obwód talii) z wywiadem dotyczącym stylu życia (aktywność fizyczna, spożycie warzyw/owoców) oraz historią medyczną (nadciśnienie, hiperglikemia, obciążenie genetyczne).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/halodoctor.jpg}
+    \caption{Kalkulator ryzyka HaloDoctor}
+    \label{fig:halodoctor}
+\end{figure}
+
+Do głównych zalet tego rozwiązania należą:
+\begin{itemize}
+    \item \textbf{Integracja z usługami medycznymi}: Jako część platformy telemedycznej, narzędzie często sugeruje bezpośrednią konsultację lekarską w przypadku wysokiego wyniku, lub w celu prawdziwej diagnozy.
+    \item \textbf{Przejrzysta skala punktowa}: Wynik jest sumowany w zakresie 0-24 punktów, co pozwala na łatwe przypisanie pacjenta do jednej z czterech grup ryzyka.
+\end{itemize}
+
+Minusy kalkulatora to:
+\begin{itemize}
+    \item \textbf{Subiektywność danych}: Pytania o dietę (np. "Czy jadasz warzywa codziennie?") opierają się na deklaracji użytkownika, co może prowadzić do zafałszowania wyniku.
+    \item \textbf{Bariera wejścia}: Wymóg dokładnego zmierzenia obwodu w pasie może być problematyczny dla użytkownika korzystającego z aplikacji "w biegu".
+    \item \textbf{Sztywny algorytm}: Podobnie jak w innych kalkulatorach opartych na FINDRISC, wagi poszczególnych pytań są stałe i nie dostosowują się dynamicznie do specyficznych kombinacji cech pacjenta.
+\end{itemize}
+
+\section{Wymagania funkcjonalne i niefunkcjonalne}
+
+\subsection{Wymagania funkcjonalne}
+\begin{itemize}
+    \item Wprowadzanie danych diagnostycznych i metabolicznych (wiek, BMI, ciśnienie, cholesterol, poziom aktywności...) poprzez formularz.
+    \item Wyświetlanie wyniku predykcji ryzyka wystąpienia cukrzycy (klasyfikacja: zdrowy, stan przedcukrzycowy, cukrzyca) w formie graficznej.
+    \item Prezentacja interpretacji wyniku z wykorzystaniem wykresów SHAP wyjaśniających wpływ poszczególnych cech na decyzję modelu.
+    \item Generowanie i wyświetlanie inteligentnych zaleceń zdrowotnych ("Smart Advisor") dopasowanych do wyniku użytkownika.
+    \item Możliwość zapisywania codziennych logów zdrowotnych do bazy danych.
+    \item Przeglądanie historii wykonanych predykcji oraz wprowadzonych logów.
+    \item Wyświetlanie dashboardu analitycznego prezentującego trendy zmian ryzyka w czasie.
+    \item Możliwość wykonania szybkiej symulacji ryzyka dla użytkownika niezalogowanego.
+    \item Możliwość utworzenia nowego konta użytkownika.
+    \item Możliwość zalogowania się w aplikacji.
+    \item Możliwość usunięcia błędnych wpisów z dziennika zdrowia.
+    \item Możliwość edycji profilu użytkownika (dane stałe, np. wzrost do obliczeń BMI).
+\end{itemize}
+
+\subsection{Wymagania niefunkcjonalne}
+\begin{itemize}
+    \item Responsywność w przeglądarkach internetowych na urządzeniach mobilnych i desktopowych.
+    \item Wymagany stały dostęp do Internetu w celu komunikacji z API predykcyjnym.
+    \item Czas odpowiedzi modelu predykcyjnego poniżej 1 sekundy.
+    \item Skuteczność modelu uczenia maszynowego na poziomie minimum 80\%.
+    \item Bezpieczne przechowywanie haseł oraz loginów użytkowników w bazie danych.
+\end{itemize}
+
+\section{Diagram przypadków użycia}
+
+
+
+\subsection{Przypadek użycia: Szybka symulacja ryzyka}
+\textbf{Aktor}: Gość \\
+\textbf{Opis}: Wykonanie szybkiej analizy ryzyka cukrzycy bez konieczności logowania się. \\
+\textbf{Warunki wstępne}: Użytkownik niezalogowany, otwarty ekran startowy aplikacji. \\
+\textbf{Przebieg}:
+\begin{enumerate}
+    \item Gość wybiera opcję „Oblicz ryzyko cukrzycy”.
+    \item System wyświetla formularz do diagnozy.
+    \item Gość uzupełnia formularz i zatwierdza go.
+    \item System przetwarza dane i wyświetla diagnozę.
+    \item System wyświetla interpretację wyniku.
+\end{enumerate}
+
+\subsection{Przypadek użycia: Rejestracja}
+\textbf{Aktor}: Gość \\
+\textbf{Opis}: Utworzenie nowego konta użytkownika. \\
+\textbf{Warunki wstępne}: Użytkownik nie posiada konta lub nie jest zalogowany. \\
+\textbf{Przebieg}:
+\begin{enumerate}
+    \item Gość wybiera opcję rejestracji.
+    \item System wyświetla formularz do rejestracji.
+    \item Gość podaje wymagane dane i zatwierdza wybór.
+    \item System weryfikuje poprawność danych i tworzy konto w bazie.
+    \item Następuje automatyczne logowanie użytkownika.
+\end{enumerate}
+
+\subsection{Przypadek użycia: Logowanie}
+\textbf{Aktor}: Gość \\
+\textbf{Opis}: Uwierzytelnienie użytkownika w systemie. \\
+\textbf{Warunki wstępne}: Użytkownik posiada konto, ale nie jest zalogowany. \\
+\textbf{Przebieg}:
+\begin{enumerate}
+    \item Gość wybiera opcję Logowania.
+    \item System wyświetla formularz logowania.
+    \item Gość wprowadza login i hasło.
+    \item System weryfikuje zgodność danych z bazą bezpiecznie przechowywanych haseł.
+    \item[5a.] Dane są poprawne – użytkownik uzyskuje dostęp do aplikacji jako użytkownik zalogowany.
+    \item[5b.] Dane są błędne – system wyświetla komunikat o błędzie.
+    \item[6b.] Powrót do kroku 3.
+\end{enumerate}
+
+\subsection{Przypadek użycia: Wprowadzenie danych i predykcja ryzyka}
+\textbf{Aktor}: Użytkownik Zalogowany \\
+\textbf{Opis}: Wykonanie analizy ryzyka cukrzycy z trwałym zapisem wyniku w historii użytkownika w celu analizy trendów. \\
+\textbf{Warunki wstępne}: Użytkownik zalogowany w aplikacji. \\
+\textbf{Przebieg}:
+\begin{enumerate}
+    \item Użytkownik wybiera opcję „Oblicz ryzyko cukrzycy”.
+    \item System wyświetla formularz do diagnozy.
+    \item Użytkownik uzupełnia formularz i zatwierdza go.
+    \item System przetwarza dane i wyświetla diagnozę.
+    \item System wyświetla interpretację wyniku.
+    \item System zapisuje dane w bazie danych.
+\end{enumerate}
+
+\subsection{Przypadek użycia: Przeglądanie historii i trendów}
+\textbf{Aktor}: Użytkownik Zalogowany \\
+\textbf{Opis}: Analiza zapisanych wyników oraz trendów zmian zdrowotnych w czasie. \\
+\textbf{Warunki wstępne}: Użytkownik zalogowany, posiada w bazie co najmniej jeden zapisany wynik. \\
+\textbf{Przebieg}:
+\begin{enumerate}
+    \item Użytkownik wybiera moduł analityczny.
+    \item System pobiera historię badań zdrowotnych z bazy danych.
+    \item System wyświetla wykresy trendów zmian ryzyka w czasie.
+    \item Użytkownik może wybrać konkretny wpis, aby zobaczyć jego szczegóły.
+\end{enumerate}
+
+\subsection{Przypadek użycia: Zarządzanie dziennikiem zdrowia}
+\textbf{Aktor}: Użytkownik Zalogowany \\
+\textbf{Opis}: Edycja profilu oraz usuwanie błędnych wpisów z historii. \\
+\textbf{Warunki wstępne}: Użytkownik zalogowany. \\
+\textbf{Przebieg}:
+\begin{enumerate}
+    \item Użytkownik przegląda listę swoich wpisów zdrowotnych.
+    \item Użytkownik wybiera błędny wpis i opcję usunięcia.
+    \item System prosi o potwierdzenie i usuwa wpis z bazy danych.
+    \item Użytkownik wchodzi w ustawienia profilu, aby zaktualizować dane stałe.
+\end{enumerate}

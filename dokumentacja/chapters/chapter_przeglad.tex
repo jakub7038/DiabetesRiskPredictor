@@ -1,0 +1,61 @@
+\chapter{Przegląd Aktualnych Rozwiązań}
+\label{cha:przeglad}
+
+\section{Formularz American Diabetes Association}
+
+Internetowy kalkulatory ryzyka cukrzycy - formularz American Diabetes Association jest jednym z najczęściej spotykanych rozwiązań pozwalających na szybką samoocenę stanu zdrowia. Umożliwiają one wprowadzenie podstawowych biometrycznych, takich jak wiek, waga czy wzrost, w celu oszacowania ryzyka zachorowania w oparciu o sztywne reguły punktowe.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/formularzamericanda1.jpg}
+        \caption{Część 1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/formularzamericanda2.jpg}
+        \caption{Część 2}
+    \end{subfigure}
+    \caption{Formularz American Diabetes Association}
+    \label{fig:ada_form}
+\end{figure}
+
+Do głównych zalet wymienionych wyżej rozwiązań należą:
+\begin{itemize}
+    \item \textbf{Szybkość i prostota}: Użytkownik otrzymuje wynik natychmiast po wypełnieniu krótkiej ankiety.
+    \item \textbf{Dostępność}: Brak konieczności zakładania konta czy logowania.
+    \item \textbf{Wiarygodność źródeł}: Bazują na ustandaryzowanych wytycznych medycznych.
+\end{itemize}
+
+Minusy tego formularza to:
+\begin{itemize}
+    \item \textbf{Brak personalizacji i wyjaśnienia}: Wynik jest liczbą lub statusem bez wyjaśnienia, który czynnik zaważył na diagnozie.
+    \item \textbf{Brak historii}: Brak możliwości zapisu wyników i śledzenia zmian w czasie.
+    \item Formularz na ekranie końcowym zniechęcający użytkowników do sprawdzenia wyników.
+\end{itemize}
+
+\section{Kalkulator platformy HaloDoctor}
+
+Drugim analizowanym rozwiązaniem jest kalkulator ryzyka cukrzycy typu 2 dostępny na platformie telemedycznej HaloDoctor. Narzędzie to oparte jest na międzynarodowej skali FINDRISC (Finnish Diabetes Risk Score) i służy do oszacowania ryzyka zachorowania w perspektywie najbliższych 10 lat. Formularz składa się z ośmiu kluczowych pytań, które łączą parametry ilościowe (BMI, obwód talii) z wywiadem dotyczącym stylu życia (aktywność fizyczna, spożycie warzyw/owoców) oraz historią medyczną (nadciśnienie, hiperglikemia, obciążenie genetyczne).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/halodoctor.jpg}
+    \caption{Kalkulator ryzyka HaloDoctor}
+    \label{fig:halodoctor}
+\end{figure}
+
+Do głównych zalet tego rozwiązania należą:
+\begin{itemize}
+    \item \textbf{Integracja z usługami medycznymi}: Jako część platformy telemedycznej, narzędzie często sugeruje bezpośrednią konsultację lekarską w przypadku wysokiego wyniku, lub w celu prawdziwej diagnozy.
+    \item \textbf{Przejrzysta skala punktowa}: Wynik jest sumowany w zakresie 0-24 punktów, co pozwala na łatwe przypisanie pacjenta do jednej z czterech grup ryzyka.
+\end{itemize}
+
+Minusy kalkulatora to:
+\begin{itemize}
+    \item \textbf{Subiektywność danych}: Pytania o dietę (np. "Czy jadasz warzywa codziennie?") opierają się na deklaracji użytkownika, co może prowadzić do zafałszowania wyniku.
+    \item \textbf{Bariera wejścia}: Wymóg dokładnego zmierzenia obwodu w pasie może być problematyczny dla użytkownika korzystającego z aplikacji "w biegu".
+    \item \textbf{Sztywny algorytm}: Podobnie jak w innych kalkulatorach opartych na FINDRISC, wagi poszczególnych pytań są stałe i nie dostosowują się dynamicznie do specyficznych kombinacji cech pacjenta.
+\end{itemize}

@@ -1,0 +1,115 @@
+\chapter{Modele Uczenia Maszynowego}
+\label{cha:modele}
+
+\section{Przegląd Modeli}
+W celu zapewnienia wysokiej wiarygodności predykcji, system wykorzystuje zespół trzech różnych modeli klasyfikacyjnych działających równolegle. Pozwala to na porównanie wyników i zwiększenie pewności diagnozy.
+
+Wykorzystane algorytmy to:
+\begin{enumerate}
+    \item \textbf{Logistic Regression}: Model liniowy, służący jako punkt odniesienia (baseline). Charakteryzuje się wysoką intepretowalnością. W eksperymentach osiągnął dokładność 64.33\% przy najkrótszym czasie treningu (0.27s).
+    \item \textbf{Random Forest}: Zespół drzew decyzyjnych. Model ten jest odporny na overfitting. Osiągnął dokładność 79.45\% w czasie treningu wynoszącym 25.41s.
+    \item \textbf{Gradient Boosting}: Zaawansowana metoda ensemble. Zapewniała najwyższą ogólną dokładność (84.9\%), jednak odbyło się to kosztem najdłuższego czasu treningu (75.34s).
+\end{enumerate}
+
+Modele zostały skonfigurowane do klasyfikacji wieloklasowej (0 - brak cukrzycy, 1 - stan przedcukrzycowy, 2 - cukrzyca) lub binarnej, w zależności od konfiguracji treningowej. W obecnej wersji system wspiera klasyfikację w 3 klasach.
+
+\section{Dane Treningowe i Preprocessing}
+Modele zostały wytrenowane na zbiorze danych pochodzącym z CDC BRFSS (Behavioral Risk Factor Surveillance System), zawierającym ok. 250,000 rekordów~\cite{kaggle2021}.
+
+\subsection{Cechy wejściowe}
+Każdy model przyjmuje na wejściu wektor 18 cech opisujących stan zdrowia i styl życia pacjenta.
+
+\begin{table}[htbp]
+    \centering
+    \tiny
+    \caption{Cechy wejściowe modelu}
+    \label{tab:cechy}
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+        \hline
+        \textbf{Kategoria} & \textbf{Cecha} & \textbf{Opis} \\
+        \hline
+        Demografia & Sex, Age & Płeć i wiek (kategorie) \\
+        \hline
+        Badania & BMI, HighBP, HighChol & Wskaźnik masy ciała, nadciśnienie, wysoki cholesterol \\
+        \hline
+        Zdrowie & GenHlth, PhysHlth, MentHlth & Ogólna ocena zdrowia, dni złego samopoczucia fiz./psych. \\
+        \hline
+        Choroby & Stroke, HeartDiseaseorAttack & Przebyty udar, choroby serca \\
+        \hline
+        Nawyki & Smoker, Alcohol, Fruits, Veggies & Palenie, alkohol, dieta \\
+        \hline
+        Inne & PhysActivity, DiffWalk & Aktywność fizyczna, trudności w chodzeniu \\
+        \hline
+        Opieka & AnyHealthcare, NoDocbcCost & Dostęp do opieki, koszt wizyt \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Preprocessing}
+Przed podaniem danych do modeli zastosowano następujące kroki przetwarzania wstępnego:
+\begin{enumerate}
+    \item \textbf{Czyszczenie danych}: Usunięcie brakujących wartości i duplikatów.
+    \item \textbf{Skalowanie}: Zastosowano \texttt{StandardScaler} do normalizacji cech numerycznych (np. BMI), aby sprowadzić je do wspólnej skali (średnia 0, odchylenie standardowe 1).
+    \item \textbf{Balansowanie klas}: Zbiór treningowy był niezbalansowany (znacznie więcej osób zdrowych). Zastosowano parametr \texttt{class\_weight='balanced'} w modelach oraz techniki oversamplingu (podczas eksperymentów) w celu wyrównania szans dla klas mniejszościowych (cukrzyca).
+\end{enumerate}
+
+\section{Szczegółowa Ewaluacja i Problem Niezbalansowania}
+Modele zostały zweryfikowane na zbiorze testowym liczącym 50 736 próbek. Kluczowym wyzwaniem w tym zbiorze danych jest silne niezbalansowanie klas – zdecydowana większość próbek (ok. 84\%) to osoby zdrowe (klasa 0).
+
+\subsection{Pułapka Dokładności (Accuracy Paradox)}
+Analizując wyniki, można zauważyć, że **Gradient Boosting** osiągnął najwyższą dokładność (84.9\%). Jest to jednak wynik mylący. Model ten zoptymalizował się pod klasę większościową, niemal całkowicie ignorując klasy rzadkie, które są najważniejsze z medycznego punktu widzenia.
+\begin{itemize}
+    \item Recall dla stanu przedcukrzycowego (klasa 1) w Gradient Boosting wyniósł 0.00 (model w ogóle jej nie wykrywa).
+    \item Recall dla cukrzycy (klasa 2) wyniósł jedynie 0.18.
+\end{itemize}
+
+Dlatego w systemach medycznych ważniejsza od ogólnej dokładności jest zdolność do detekcji choroby (Czułość/Recall).
+
+\textbf{Logistic Regression}, mimo najniższej ogólnej dokładności (64.33\%), wykazał się relatywnie najlepszą zdolnością do wykrywania trudnych przypadków (Recall dla klasy 2 wynosi 0.59, a dla klasy 1 wynosi 0.30). Oznacza to, że częściej generuje fałszywe alarmy (niższa precyzja), ale rzadziej przeoczy osobę chorą.
+
+\textbf{Random Forest} stanowi kompromis, oferując lepszą precyzję niż regresja i znacznie lepszą wykrywalność chorób niż Gradient Boosting.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Porównanie zdolności detekcji Cukrzycy (Klasa 2) - klasy rzadkiej}
+    \label{tab:metrics_diabetes}
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Model} & \textbf{Precision} & \textbf{Recall (Czułość)} & \textbf{F1-Score} \\
+        \hline
+        Logistic Regression & 0.35 & \textbf{0.59} & \textbf{0.44} \\
+        \hline
+        Random Forest & 0.38 & 0.48 & 0.43 \\
+        \hline
+        Gradient Boosting & \textbf{0.56} & 0.18 & 0.27 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Podane czasy (0.27s vs 75.34s) odnoszą się do procesu \textbf{trenowania} modelu, a nie predykcji. Czas predykcji dla pojedynczego pacjenta we wszystkich modelach jest liczony w milisekundach i nie stanowi wąskiego gardła. Zastosowanie trzech modeli (Ensemble) w aplikacji pozwala zniwelować słabości pojedynczych algorytmów.
+
+\section{Implementacja Predykcji}
+Proces predykcji w systemie przebiega następująco (listing \ref{lst:predykcja}):
+
+\begin{lstlisting}[style=stylePython, caption=Funkcja predykcji w backendzie, label=lst:predykcja]
+def predict_diabetes_risk(data):
+    # 1. Konwersja danych do DataFrame
+    input_df = pd.DataFrame([data])
+    
+    # 2. Skalowanie danych (uzycie zapisanego scalera)
+    input_scaled = scaler.transform(input_df)
+    
+    # 3. Iteracja przez modele
+    results = {}
+    for name, model in models.items():
+        # Predykcja klasy i prawdopodobienstw
+        prediction = model.predict(input_scaled)[0]
+        probs = model.predict_proba(input_scaled)[0]
+        
+        results[name] = {
+            'prediction': int(prediction),
+            'probabilities': probs.tolist()
+        }
+    
+    return results
+\end{lstlisting}
