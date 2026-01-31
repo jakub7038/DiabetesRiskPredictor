@@ -278,22 +278,61 @@ const RiskPredictor = () => {
                 bmi = weight / (heightM * heightM);
             }
 
+            // --- WALIDACJA FRONTEND (Zgodna z backend/routes.py) ---
+            const errors: string[] = [];
+
+            // 1. Walidacja BMI
+            if (bmi < 10 || bmi > 70) {
+                errors.push(`Twoje BMI wynosi ${bmi.toFixed(1)}. Wymagane BMI w zakresie 10 - 70. Sprawdź wagę i wzrost.`);
+            }
+
+            // 2. Walidacja Dni (MentHlth, PhysHlth)
+            const mentHlth = parseInt(answers['MentHlth'] || '0');
+            if (mentHlth < 0 || mentHlth > 30) {
+                errors.push("Liczba dni złego samopoczucia psychicznego musi być w zakresie 0-30.");
+            }
+
+            const physHlth = parseInt(answers['PhysHlth'] || '0');
+            if (physHlth < 0 || physHlth > 30) {
+                errors.push("Liczba dni złego samopoczucia fizycznego musi być w zakresie 0-30.");
+            }
+
+            // 3. Walidacja Wiek
+            const age = parseInt(answers['Age'] || '0');
+            if (age < 1 || age > 13) {
+                errors.push("Nieprawidłowy przedział wiekowy.");
+            }
+
+            // 4. Walidacja GenHlth
+            const genHlth = parseInt(answers['GenHlth'] || '3');
+            if (genHlth < 1 || genHlth > 5) {
+                errors.push("Ocena zdrowia musi być w zakresie 1-5.");
+            }
+
+
+            if (errors.length > 0) {
+                alert("Błąd walidacji danych:\n\n" + errors.join("\n"));
+                setIsLoading(false);
+                return;
+            }
+            // --- KONIEC WALIDACJI ---
+
             const predictionData = {
                 Sex: parseInt(answers['Sex'] || '0'),
-                Age: parseInt(answers['Age'] || '1'),
+                Age: age,
                 BMI: bmi,
                 HighBP: parseInt(answers['HighBP'] || '0'),
                 HighChol: parseInt(answers['HighChol'] || '0'),
                 Stroke: parseInt(answers['Stroke'] || '0'),
                 DiffWalk: parseInt(answers['DiffWalk'] || '0'),
-                GenHlth: parseInt(answers['GenHlth'] || '3'),
-                PhysHlth: parseInt(answers['PhysHlth'] || '0'),
+                GenHlth: genHlth,
+                PhysHlth: physHlth,
                 PhysActivity: parseInt(answers['PhysActivity'] || '0'),
                 Smoker: parseInt(answers['Smoker'] || '0'),
                 Fruits: parseInt(answers['Fruits'] || '0'),
                 Veggies: parseInt(answers['Veggies'] || '0'),
                 HvyAlcoholConsump: parseInt(answers['HvyAlcoholConsump'] || '0'),
-                MentHlth: parseInt(answers['MentHlth'] || '0'),
+                MentHlth: mentHlth,
             };
 
             console.log('Sending prediction data:', predictionData);

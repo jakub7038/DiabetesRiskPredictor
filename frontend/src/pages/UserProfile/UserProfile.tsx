@@ -187,7 +187,7 @@ const UserProfile: React.FC = () => {
           {!userData && !isEditing ? (
             <div>
               <p>Brak zapisanych danych.</p>
-              <Button variant="secondary" onClick={handleEdit}>
+              <Button variant="secondary" onClick={handleEdit} style={{ marginTop: '10px' }}>
                 Dodaj dane
               </Button>
             </div>
@@ -214,9 +214,17 @@ const UserProfile: React.FC = () => {
                 >
                   {/* Options same as before */}
                   <option value="1">18-24</option>
+                  <option value="2">25-29</option>
+                  <option value="3">30-34</option>
+                  <option value="4">35-39</option>
                   <option value="5">40-44</option>
+                  <option value="6">45-49</option>
+                  <option value="7">50-54</option>
+                  <option value="8">55-59</option>
                   <option value="9">60-64</option>
-                  {/* ... keeping it short for this edit, logic implies all options */}
+                  <option value="10">65-69</option>
+                  <option value="11">70-74</option>
+                  <option value="12">75-79</option>
                   <option value="13">80+</option>
                 </select>
               </div>
@@ -292,6 +300,7 @@ const UserProfile: React.FC = () => {
             <Button
               variant="primary"
               onClick={() => navigate('/predyktor-ryzyka')}
+              style={{ marginTop: '10px' }}
             >
               Wykonaj test
             </Button>

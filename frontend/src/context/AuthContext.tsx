@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '@/api/authService';
 
 export interface User {
   id: string | number;
@@ -24,21 +25,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('accessToken');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    
-    setIsLoading(false);
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('accessToken');
+      const storedUser = localStorage.getItem('user');
+
+      if (storedToken && storedUser) {
+        try {
+          // Verify token with backend
+          await authService.getUserData();
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+        } catch (error) {
+          // Token invalid or expired
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+        }
+      }
+
+      setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = (accessToken: string, refreshToken: string, userData: User) => {
     setToken(accessToken);
     setUser(userData);
-    
+
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -47,11 +63,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setToken(null);
     setUser(null);
-    
+
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    
+
   };
 
   return (
