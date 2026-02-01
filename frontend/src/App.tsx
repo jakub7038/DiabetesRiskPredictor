@@ -7,6 +7,7 @@ import Register from '@/pages/Register/Register'
 import RiskPredictor from '@/pages/RiskPredictor/RiskPredictor'
 import UserProfile from '@/pages/UserProfile/UserProfile'
 import PredictionResult from '@/pages/PredictionResult/PredictionResult'
+import PersonaDetail from '@/pages/PersonaDetail/PersonaDetail'
 import History from '@/pages/History/History'
 
 
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path='/predyktor-ryzyka' element={<RiskPredictor />}></Route>
           <Route path='/wynik' element={<PredictionResult />}></Route>
+          <Route path='/persona/:personaId' element={<PersonaDetail />}></Route>
 
           {/* Guest only routes */}
           <Route path="/logowanie" element={

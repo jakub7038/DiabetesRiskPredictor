@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import styles from './PredictionResult.module.css';
+import { ML_PERSONAS } from '../../constants/personas';
 
 interface ModelPrediction {
   confidence: number;
@@ -89,7 +90,7 @@ const PredictionResult = () => {
   };
 
   const { predictions, is_saved } = data;
-  const mainPrediction = predictions.random_forest || predictions.logistic || predictions.gradient_boost;
+  const mainPrediction = predictions.gradient_boost || predictions.random_forest || predictions.logistic;
 
   // Oblicz prawdziwe ryzyko cukrzycy
   const diabetesRisk = mainPrediction?.diabetes_risk || 
@@ -135,21 +136,20 @@ const PredictionResult = () => {
           <div className={styles.modelsGrid}>
             {predictions.logistic && (
               <ModelCard
-                name="Regresja Logistyczna"
                 data={predictions.logistic}
+                modelKey="logistic"
               />
             )}
             {predictions.random_forest && (
               <ModelCard
-                name="Random Forest"
                 data={predictions.random_forest}
-                isMain
+                modelKey="random_forest"
               />
             )}
             {predictions.gradient_boost && (
               <ModelCard
-                name="Gradient Boosting"
                 data={predictions.gradient_boost}
+                modelKey="gradient_boost"
               />
             )}
           </div>
@@ -228,12 +228,13 @@ const PredictionResult = () => {
 
 // Helper Component
 interface ModelCardProps {
-  name: string;
   data: ModelPrediction;
-  isMain?: boolean;
+  modelKey?: string;
 }
 
-const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
+const ModelCard = ({ data, modelKey }: ModelCardProps) => {
+  const navigate = useNavigate();
+
   const getResultLabel = (prediction: number): string => {
     switch (prediction) {
       case 0: return 'Brak cukrzycy';
@@ -243,16 +244,26 @@ const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
     }
   };
 
+  // Get persona for this model
+  const persona = modelKey && ML_PERSONAS[modelKey];
+  const displayName = persona ? `${persona.name} (${persona.model})` : 'Model';
+
   // Oblicz prawdziwe ryzyko cukrzycy (klasa 1 + klasa 2)
   const diabetesRisk = data.diabetes_risk || 
                        (data.probabilities.class_1 + data.probabilities.class_2);
 
+  const handleLearnMore = () => {
+    if (modelKey) {
+      navigate(`/persona/${modelKey}`);
+    }
+  };
+
   return (
-    <div className={`${styles.modelCard} ${isMain ? styles.modelCardMain : ''}`}>
+    <div className={styles.modelCard}>
       <div className={styles.modelHeader}>
-        <h4 className={styles.modelName}>{name}</h4>
-        {isMain && <span className={styles.mainBadge}>Główny</span>}
+        <h4 className={styles.modelName}>{displayName}</h4>
       </div>
+
       <div className={styles.modelResult}>
         <div className={styles.modelPrediction}>
           {getResultLabel(data.prediction)}
@@ -296,6 +307,15 @@ const ModelCard = ({ name, data, isMain }: ModelCardProps) => {
           <div className={styles.probValue}>{data.probabilities.class_2.toFixed(1)}%</div>
         </div>
       </div>
+
+      {modelKey && (
+        <button 
+          className={styles.learnMoreBtn}
+          onClick={handleLearnMore}
+        >
+          Poznaj {persona?.name}
+        </button>
+      )}
     </div>
   );
 };

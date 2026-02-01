@@ -35,10 +35,10 @@ Jinja2==3.1.6
 jiter==0.12.0
 joblib==1.5.2
 kiwisolver==1.4.9
-llvmlite==0.45.1
+llvmlite>=0.45
 MarkupSafe==3.0.3
-matplotlib==3.10.7
-numba==0.62.1
+matplotlib>=3.10
+numba>=0.59
 numpy==2.3.5
 openai==2.14.0
 packaging==25.0

@@ -224,9 +224,9 @@ const History = () => {
                                 (data.probabilities.class_1 + data.probabilities.class_2);
 
                               const getModelLabel = (name: string) => {
-                                if (name === 'random_forest') return 'Random Forest (Główny)';
+                                if (name === 'gradient_boost') return 'Gradient Boosting (Główny)';
                                 if (name === 'logistic') return 'Regresja Logistyczna';
-                                if (name === 'gradient_boost') return 'Gradient Boosting';
+                                if (name === 'random_forest') return 'Random Forest';
                                 return name;
                               }
 
